@@ -138,8 +138,8 @@ int mobilenet()
   task->stack_size = (uint32_t) 4*1024;
   task->slave_stack_size = (uint32_t) 1024;
 
-  while(1)
-  {
+//  while(1)
+//  {
       pi_cluster_send_task_to_cl(&cluster_dev, task);
 
       int checksum = 0;
@@ -157,7 +157,6 @@ int mobilenet()
       if (class == 144) printf("Correct Checksum!\n");
       else printf("Checksum wrong! Current value is %d\n", class);
 
-
       {
         unsigned int TotalCycles = 0, TotalOper = 0;
         printf("\n");
@@ -169,7 +168,7 @@ int mobilenet()
         printf("%35s: %10d, Operation: %10d, Operation/Cycle: %f\n", "Total", TotalCycles, TotalOper, ((float) TotalOper)/ TotalCycles);
         printf("\n");
       }
-  }
+//  }
 
   // network destruct
   MobileNetCNN_Destruct();
