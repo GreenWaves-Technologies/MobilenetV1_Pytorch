@@ -176,8 +176,14 @@ int mobilenet()
   pi_cluster_close(&cluster_dev);
 
   // Exit Test
-  printf("Test success\n");
-  return 0;
+  if (class == 144){
+    printf("Test success\n");
+    return 0;
+  }
+  else{
+    printf("Test not success\n");
+    return -1;
+  }
 
 }
 
