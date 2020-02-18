@@ -182,7 +182,7 @@ int mobilenet()
   }
   else{
     printf("Test not success\n");
-    return -1;
+    pmsis_exit(-1) ;
   }
 
 }
