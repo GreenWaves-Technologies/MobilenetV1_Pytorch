@@ -42,28 +42,19 @@ APP_LDFLAGS +=  -flto -Wl,--gc-sections
 APP_CFLAGS += -w -Wno-maybe-uninitialized -Wno-unused-but-set-variable
 APP_CFLAGS += -I$(TILER_INC) -I$(MOBILENET_GEN_PATH) -Iutils/inc
 
-ifeq ($(strip $(platform)),)
-	#this is for gapuino
-	ifeq ($(ALREADY_FLASHED),1)
-		PLPBRIDGE_FLAGS += $(DEVICE_CONNECTION)
-	else
-		# this is for the board
-		PLPBRIDGE_FLAGS += -f $(mkfile_path)/MN_L3_Flash_Const.bin $(mkfile_path)/binFiles/L0_INPUT.bin
-	endif
-else
-	#this is for gvsoc
-	mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-	FLASH_FILE_PATH = $(dir $(mkfile_path))binFiles/
-	FLASH_FILES = $(shell find $(FLASH_FILE_PATH) -iname "L0_INPUT.bin")
-	FLASH_FILES += $(shell find $(dir $(mkfile_path)) -iname "MN_L3_Flash_Const.bin")
-	PLPBRIDGE_FLAGS += -f $(FLASH_FILES)  -fileIO
-	override runner_args = $(addprefix --config-opt=flash/fs/files=, $(FLASH_FILES))
-endif
+
+READFS_FILES += $(realpath MN_L3_Flash_Const.bin) 
+READFS_FILES += $(realpath binFiles/L0_INPUT.bin)
+PLPBRIDGE_FLAGS += -f 
+
+
+export GAP_USE_OPENOCD=1
+io=host
 
 
 # The double colon allows us to force this to occur before the imported all target
 # Link model generation to all step
-all:: #model
+all:: model
 
 # Build the code generator
 GenTileBuild:
