@@ -43,10 +43,11 @@ APP_CFLAGS += -w -Wno-maybe-uninitialized -Wno-unused-but-set-variable
 APP_CFLAGS += -I$(TILER_INC) -I$(MOBILENET_GEN_PATH) -Iutils/inc
 
 
-READFS_FILES += $(realpath MN_L3_Flash_Const.bin) 
-READFS_FILES += $(realpath binFiles/L0_INPUT.bin)
-PLPBRIDGE_FLAGS += -f 
-
+ifeq ($(ALREADY_FLASHED),)
+		# this is for the board
+		READFS_FILES = $(realpath MN_L3_Flash_Const.bin) $(realpath binFiles/L0_INPUT.bin)
+		PLPBRIDGE_FLAGS += -f 
+endif
 
 export GAP_USE_OPENOCD=1
 io=host
@@ -54,7 +55,7 @@ io=host
 
 # The double colon allows us to force this to occur before the imported all target
 # Link model generation to all step
-all:: model
+all:: #model
 
 # Build the code generator
 GenTileBuild:
