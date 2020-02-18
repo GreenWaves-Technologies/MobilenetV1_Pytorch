@@ -55,7 +55,7 @@ io=host
 
 # The double colon allows us to force this to occur before the imported all target
 # Link model generation to all step
-all:: #model
+all:: model
 
 # Build the code generator
 GenTileBuild:
