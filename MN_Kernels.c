@@ -6618,6 +6618,7 @@ int MobileNetCNN_Construct()
 	/* Moving ML11, size 256 from HyperFlash at 4231312 to (size 256) L2 at 313536 */
 	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231312), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313536), 256, 0, &Uchan1);
 	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	Out = (short int *__restrict) (L2_Memory + 0);
 	return 0;
 }
 int MobileNetCNN_Destruct()
@@ -6627,6 +6628,7 @@ int MobileNetCNN_Destruct()
 	AT_L2_FREE(0, L2_Memory, 315200);
 	AT_L1_FREE(0, L1_Memory, 49008);
 	AT_HYPERFLASH_FS_CLOSE(&HyperFlash);
+	Out = 0;
 	return 0;
 }
 unsigned int MNPerf[29];
@@ -6704,11 +6706,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_EVENT Uchan4;
 	MNPerf[0] = gap_cl_readhwtimer();
 	Layer0(
-		(signed char *__restrict) In, /* In */
-		(signed char *__restrict) (L2_Memory+310016), /* Filter */
-		(signed char * __restrict__) (L2_Memory+315072), /* Bias */
-		(signed char *__restrict) (L2_Memory+315104), /* MulBias */
-		(signed char *__restrict) (L3_Memory+0), /* Out */
+		((signed char *__restrict) In), /* In */
+		((signed char *__restrict) (L2_Memory+310016)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+315072)), /* Bias */
+		((signed char *__restrict) (L2_Memory+315104)), /* MulBias */
+		((signed char *__restrict) (L3_Memory+0)), /* Out */
 		9, /* Norm */
 		11, /* NormBias */
 		7 /* NormMulBias */
@@ -6716,11 +6718,11 @@ int MobileNetCNN(
 	MNPerf[0] = gap_cl_readhwtimer() - MNPerf[0];
 	MNPerf[1] = gap_cl_readhwtimer();
 	Layer1(
-		(signed char *__restrict) (L3_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+311456), /* Filter */
-		(signed char * __restrict__) (L2_Memory+315136), /* Bias */
-		(signed char *__restrict) (L2_Memory+315168), /* MulBias */
-		(signed char *__restrict) (L3_Memory+802816), /* Out */
+		((signed char *__restrict) (L3_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+311456)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+315136)), /* Bias */
+		((signed char *__restrict) (L2_Memory+315168)), /* MulBias */
+		((signed char *__restrict) (L3_Memory+802816)), /* Out */
 		2, /* Norm */
 		1, /* NormBias */
 		7 /* NormMulBias */
@@ -6728,13 +6730,13 @@ int MobileNetCNN(
 	MNPerf[1] = gap_cl_readhwtimer() - MNPerf[1];
 	MNPerf[2] = gap_cl_readhwtimer();
 	Layer2(
-		(signed char *__restrict) (L3_Memory+802816), /* In2 */
-		(signed char *__restrict) (L2_Memory+305664), /* In1 */
-		(signed char * __restrict__) (L2_Memory+314816), /* Bias */
-		(signed char *__restrict) (L2_Memory+314880), /* MulBias */
-		(signed char *__restrict) (L3_Memory+0), /* Out */
+		((signed char *__restrict) (L3_Memory+802816)), /* In2 */
+		((signed char *__restrict) (L2_Memory+305664)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+314816)), /* Bias */
+		((signed char *__restrict) (L2_Memory+314880)), /* MulBias */
+		((signed char *__restrict) (L3_Memory+0)), /* Out */
 		6, /* Norm */
-		5, /* NormBias */
+		7, /* NormBias */
 		7 /* NormMulBias */
 	);
 	MNPerf[2] = gap_cl_readhwtimer() - MNPerf[2];
@@ -6742,11 +6744,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5366784), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 227584), 8192, 0, &Uchan0);
 	MNPerf[3] = gap_cl_readhwtimer();
 	Layer3(
-		(signed char *__restrict) (L3_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+310880), /* Filter */
-		(signed char * __restrict__) (L2_Memory+314944), /* Bias */
-		(signed char *__restrict) (L2_Memory+315008), /* MulBias */
-		(signed char *__restrict) (L2_Memory+26880), /* Out */
+		((signed char *__restrict) (L3_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+310880)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+314944)), /* Bias */
+		((signed char *__restrict) (L2_Memory+315008)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+26880)), /* Out */
 		1, /* Norm */
 		0, /* NormBias */
 		7 /* NormMulBias */
@@ -6756,13 +6758,13 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
 	MNPerf[4] = gap_cl_readhwtimer();
 	Layer4(
-		(signed char *__restrict) (L2_Memory+26880), /* In2 */
-		(signed char *__restrict) (L2_Memory+227584), /* In1 */
-		(signed char * __restrict__) (L2_Memory+313792), /* Bias */
-		(signed char *__restrict) (L2_Memory+313920), /* MulBias */
-		(signed char *__restrict) (L3_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+26880)), /* In2 */
+		((signed char *__restrict) (L2_Memory+227584)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+313792)), /* Bias */
+		((signed char *__restrict) (L2_Memory+313920)), /* MulBias */
+		((signed char *__restrict) (L3_Memory+0)), /* Out */
 		6, /* Norm */
-		5, /* NormBias */
+		7, /* NormBias */
 		7 /* NormMulBias */
 	);
 	MNPerf[4] = gap_cl_readhwtimer() - MNPerf[4];
@@ -6770,11 +6772,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5341184), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 25088), 16384, 0, &Uchan0);
 	MNPerf[5] = gap_cl_readhwtimer();
 	Layer5(
-		(signed char *__restrict) (L3_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+307712), /* Filter */
-		(signed char * __restrict__) (L2_Memory+314048), /* Bias */
-		(signed char *__restrict) (L2_Memory+314176), /* MulBias */
-		(signed char *__restrict) (L3_Memory+401408), /* Out */
+		((signed char *__restrict) (L3_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+307712)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+314048)), /* Bias */
+		((signed char *__restrict) (L2_Memory+314176)), /* MulBias */
+		((signed char *__restrict) (L3_Memory+401408)), /* Out */
 		4, /* Norm */
 		2, /* NormBias */
 		7 /* NormMulBias */
@@ -6784,13 +6786,13 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
 	MNPerf[6] = gap_cl_readhwtimer();
 	Layer6(
-		(signed char *__restrict) (L3_Memory+401408), /* In2 */
-		(signed char *__restrict) (L2_Memory+25088), /* In1 */
-		(signed char * __restrict__) (L2_Memory+314304), /* Bias */
-		(signed char *__restrict) (L2_Memory+314432), /* MulBias */
-		(signed char *__restrict) (L3_Memory+0), /* Out */
+		((signed char *__restrict) (L3_Memory+401408)), /* In2 */
+		((signed char *__restrict) (L2_Memory+25088)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+314304)), /* Bias */
+		((signed char *__restrict) (L2_Memory+314432)), /* MulBias */
+		((signed char *__restrict) (L3_Memory+0)), /* Out */
 		6, /* Norm */
-		5, /* NormBias */
+		7, /* NormBias */
 		7 /* NormMulBias */
 	);
 	MNPerf[6] = gap_cl_readhwtimer() - MNPerf[6];
@@ -6798,11 +6800,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5308416), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 128128), 32768, 0, &Uchan0);
 	MNPerf[7] = gap_cl_readhwtimer();
 	Layer7(
-		(signed char *__restrict) (L3_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+308864), /* Filter */
-		(signed char * __restrict__) (L2_Memory+314560), /* Bias */
-		(signed char *__restrict) (L2_Memory+314688), /* MulBias */
-		(signed char *__restrict) (L2_Memory+27776), /* Out */
+		((signed char *__restrict) (L3_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+308864)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+314560)), /* Bias */
+		((signed char *__restrict) (L2_Memory+314688)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+27776)), /* Out */
 		6, /* Norm */
 		5, /* NormBias */
 		7 /* NormMulBias */
@@ -6812,13 +6814,13 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
 	MNPerf[8] = gap_cl_readhwtimer();
 	Layer8(
-		(signed char *__restrict) (L2_Memory+27776), /* In2 */
-		(signed char *__restrict) (L2_Memory+128128), /* In1 */
-		(signed char * __restrict__) (L2_Memory+311744), /* Bias */
-		(signed char *__restrict) (L2_Memory+312000), /* MulBias */
-		(signed char *__restrict) (L3_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+27776)), /* In2 */
+		((signed char *__restrict) (L2_Memory+128128)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+311744)), /* Bias */
+		((signed char *__restrict) (L2_Memory+312000)), /* MulBias */
+		((signed char *__restrict) (L3_Memory+0)), /* Out */
 		6, /* Norm */
-		5, /* NormBias */
+		7, /* NormBias */
 		7 /* NormMulBias */
 	);
 	MNPerf[8] = gap_cl_readhwtimer() - MNPerf[8];
@@ -6826,11 +6828,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5242880), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 213248), 65536, 0, &Uchan0);
 	MNPerf[9] = gap_cl_readhwtimer();
 	Layer9(
-		(signed char *__restrict) (L3_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+301056), /* Filter */
-		(signed char * __restrict__) (L2_Memory+312256), /* Bias */
-		(signed char *__restrict) (L2_Memory+312512), /* MulBias */
-		(signed char *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L3_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+301056)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+312256)), /* Bias */
+		((signed char *__restrict) (L2_Memory+312512)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+0)), /* Out */
 		5, /* Norm */
 		4, /* NormBias */
 		7 /* NormMulBias */
@@ -6840,13 +6842,13 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
 	MNPerf[10] = gap_cl_readhwtimer();
 	Layer10(
-		(signed char *__restrict) (L2_Memory+0), /* In2 */
-		(signed char *__restrict) (L2_Memory+213248), /* In1 */
-		(signed char * __restrict__) (L2_Memory+312768), /* Bias */
-		(signed char *__restrict) (L2_Memory+313024), /* MulBias */
-		(signed char *__restrict) (L3_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+0)), /* In2 */
+		((signed char *__restrict) (L2_Memory+213248)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+312768)), /* Bias */
+		((signed char *__restrict) (L2_Memory+313024)), /* MulBias */
+		((signed char *__restrict) (L3_Memory+0)), /* Out */
 		6, /* Norm */
-		5, /* NormBias */
+		7, /* NormBias */
 		7 /* NormMulBias */
 	);
 	MNPerf[10] = gap_cl_readhwtimer() - MNPerf[10];
@@ -6854,11 +6856,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5111808), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 150528), 131072, 0, &Uchan0);
 	MNPerf[11] = gap_cl_readhwtimer();
 	Layer11(
-		(signed char *__restrict) (L3_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+303360), /* Filter */
-		(signed char * __restrict__) (L2_Memory+313280), /* Bias */
-		(signed char *__restrict) (L2_Memory+313536), /* MulBias */
-		(signed char *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L3_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+303360)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+313280)), /* Bias */
+		((signed char *__restrict) (L2_Memory+313536)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+0)), /* Out */
 		7, /* Norm */
 		7, /* NormBias */
 		7 /* NormMulBias */
@@ -6878,11 +6880,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
 	MNPerf[12] = gap_cl_readhwtimer();
 	Layer12(
-		(signed char *__restrict) (L2_Memory+0), /* In2 */
-		(signed char *__restrict) (L2_Memory+150528), /* In1 */
-		(signed char * __restrict__) (L2_Memory+286208), /* Bias */
-		(signed char *__restrict) (L2_Memory+286720), /* MulBias */
-		(signed char *__restrict) (L2_Memory+50176), /* Out */
+		((signed char *__restrict) (L2_Memory+0)), /* In2 */
+		((signed char *__restrict) (L2_Memory+150528)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+286208)), /* Bias */
+		((signed char *__restrict) (L2_Memory+286720)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+50176)), /* Out */
 		7, /* Norm */
 		7, /* NormBias */
 		7 /* NormMulBias */
@@ -6900,11 +6902,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
 	MNPerf[13] = gap_cl_readhwtimer();
 	Layer13(
-		(signed char *__restrict) (L2_Memory+50176), /* In */
-		(signed char *__restrict) (L2_Memory+281600), /* Filter */
-		(signed char * __restrict__) (L2_Memory+0), /* Bias */
-		(signed char *__restrict) (L2_Memory+512), /* MulBias */
-		(signed char *__restrict) (L2_Memory+150528), /* Out */
+		((signed char *__restrict) (L2_Memory+50176)), /* In */
+		((signed char *__restrict) (L2_Memory+281600)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+0)), /* Bias */
+		((signed char *__restrict) (L2_Memory+512)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+150528)), /* Out */
 		5, /* Norm */
 		3, /* NormBias */
 		7 /* NormMulBias */
@@ -6922,11 +6924,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
 	MNPerf[14] = gap_cl_readhwtimer();
 	Layer14(
-		(signed char *__restrict) (L2_Memory+150528), /* In2 */
-		(signed char *__restrict) (L3_Memory+1204224), /* In1 */
-		(signed char * __restrict__) (L2_Memory+124928), /* Bias */
-		(signed char *__restrict) (L2_Memory+125440), /* MulBias */
-		(signed char *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+150528)), /* In2 */
+		((signed char *__restrict) (L3_Memory+1204224)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+124928)), /* Bias */
+		((signed char *__restrict) (L2_Memory+125440)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+0)), /* Out */
 		7, /* Norm */
 		7, /* NormBias */
 		7 /* NormMulBias */
@@ -6944,11 +6946,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
 	MNPerf[15] = gap_cl_readhwtimer();
 	Layer15(
-		(signed char *__restrict) (L2_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+250880), /* Filter */
-		(signed char * __restrict__) (L2_Memory+200704), /* Bias */
-		(signed char *__restrict) (L2_Memory+201216), /* MulBias */
-		(signed char *__restrict) (L2_Memory+100352), /* Out */
+		((signed char *__restrict) (L2_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+250880)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+200704)), /* Bias */
+		((signed char *__restrict) (L2_Memory+201216)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+100352)), /* Out */
 		5, /* Norm */
 		3, /* NormBias */
 		7 /* NormMulBias */
@@ -6970,11 +6972,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
 	MNPerf[16] = gap_cl_readhwtimer();
 	Layer16(
-		(signed char *__restrict) (L2_Memory+100352), /* In2 */
-		(signed char *__restrict) (L3_Memory+1466368), /* In1 */
-		(signed char * __restrict__) (L2_Memory+229888), /* Bias */
-		(signed char *__restrict) (L2_Memory+230400), /* MulBias */
-		(signed char *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+100352)), /* In2 */
+		((signed char *__restrict) (L3_Memory+1466368)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+229888)), /* Bias */
+		((signed char *__restrict) (L2_Memory+230400)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+0)), /* Out */
 		7, /* Norm */
 		7, /* NormBias */
 		7 /* NormMulBias */
@@ -6988,11 +6990,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
 	MNPerf[17] = gap_cl_readhwtimer();
 	Layer17(
-		(signed char *__restrict) (L2_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+225280), /* Filter */
-		(signed char * __restrict__) (L2_Memory+230912), /* Bias */
-		(signed char *__restrict) (L2_Memory+231424), /* MulBias */
-		(signed char *__restrict) (L2_Memory+100352), /* Out */
+		((signed char *__restrict) (L2_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+225280)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+230912)), /* Bias */
+		((signed char *__restrict) (L2_Memory+231424)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+100352)), /* Out */
 		5, /* Norm */
 		4, /* NormBias */
 		7 /* NormMulBias */
@@ -7008,11 +7010,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
 	MNPerf[18] = gap_cl_readhwtimer();
 	Layer18(
-		(signed char *__restrict) (L2_Memory+100352), /* In2 */
-		(signed char *__restrict) (L3_Memory+1728512), /* In1 */
-		(signed char * __restrict__) (L2_Memory+24576), /* Bias */
-		(signed char *__restrict) (L2_Memory+25088), /* MulBias */
-		(signed char *__restrict) (L2_Memory+200704), /* Out */
+		((signed char *__restrict) (L2_Memory+100352)), /* In2 */
+		((signed char *__restrict) (L3_Memory+1728512)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+24576)), /* Bias */
+		((signed char *__restrict) (L2_Memory+25088)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+200704)), /* Out */
 		7, /* Norm */
 		7, /* NormBias */
 		7 /* NormMulBias */
@@ -7032,11 +7034,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
 	MNPerf[19] = gap_cl_readhwtimer();
 	Layer19(
-		(signed char *__restrict) (L2_Memory+200704), /* In */
-		(signed char *__restrict) (L2_Memory+100352), /* Filter */
-		(signed char * __restrict__) (L2_Memory+104960), /* Bias */
-		(signed char *__restrict) (L2_Memory+105472), /* MulBias */
-		(signed char *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+200704)), /* In */
+		((signed char *__restrict) (L2_Memory+100352)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+104960)), /* Bias */
+		((signed char *__restrict) (L2_Memory+105472)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+0)), /* Out */
 		5, /* Norm */
 		4, /* NormBias */
 		7 /* NormMulBias */
@@ -7058,13 +7060,13 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
 	MNPerf[20] = gap_cl_readhwtimer();
 	Layer20(
-		(signed char *__restrict) (L2_Memory+0), /* In2 */
-		(signed char *__restrict) (L3_Memory+1990656), /* In1 */
-		(signed char * __restrict__) (L2_Memory+229888), /* Bias */
-		(signed char *__restrict) (L2_Memory+230400), /* MulBias */
-		(signed char *__restrict) (L2_Memory+100352), /* Out */
+		((signed char *__restrict) (L2_Memory+0)), /* In2 */
+		((signed char *__restrict) (L3_Memory+1990656)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+229888)), /* Bias */
+		((signed char *__restrict) (L2_Memory+230400)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+100352)), /* Out */
 		6, /* Norm */
-		5, /* NormBias */
+		7, /* NormBias */
 		7 /* NormMulBias */
 	);
 	MNPerf[20] = gap_cl_readhwtimer() - MNPerf[20];
@@ -7080,11 +7082,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
 	MNPerf[21] = gap_cl_readhwtimer();
 	Layer21(
-		(signed char *__restrict) (L2_Memory+100352), /* In */
-		(signed char *__restrict) (L2_Memory+225280), /* Filter */
-		(signed char * __restrict__) (L2_Memory+230912), /* Bias */
-		(signed char *__restrict) (L2_Memory+231424), /* MulBias */
-		(signed char *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+100352)), /* In */
+		((signed char *__restrict) (L2_Memory+225280)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+230912)), /* Bias */
+		((signed char *__restrict) (L2_Memory+231424)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+0)), /* Out */
 		6, /* Norm */
 		5, /* NormBias */
 		7 /* NormMulBias */
@@ -7102,13 +7104,13 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
 	MNPerf[22] = gap_cl_readhwtimer();
 	Layer22(
-		(signed char *__restrict) (L2_Memory+0), /* In2 */
-		(signed char *__restrict) (L3_Memory+2252800), /* In1 */
-		(signed char * __restrict__) (L2_Memory+229888), /* Bias */
-		(signed char *__restrict) (L2_Memory+230400), /* MulBias */
-		(signed char *__restrict) (L2_Memory+100352), /* Out */
+		((signed char *__restrict) (L2_Memory+0)), /* In2 */
+		((signed char *__restrict) (L3_Memory+2252800)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+229888)), /* Bias */
+		((signed char *__restrict) (L2_Memory+230400)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+100352)), /* Out */
 		8, /* Norm */
-		9, /* NormBias */
+		7, /* NormBias */
 		7 /* NormMulBias */
 	);
 	MNPerf[22] = gap_cl_readhwtimer() - MNPerf[22];
@@ -7124,11 +7126,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
 	MNPerf[23] = gap_cl_readhwtimer();
 	Layer23(
-		(signed char *__restrict) (L2_Memory+100352), /* In */
-		(signed char *__restrict) (L2_Memory+225280), /* Filter */
-		(signed char * __restrict__) (L2_Memory+230912), /* Bias */
-		(signed char *__restrict) (L2_Memory+231424), /* MulBias */
-		(signed char *__restrict) (L2_Memory+50176), /* Out */
+		((signed char *__restrict) (L2_Memory+100352)), /* In */
+		((signed char *__restrict) (L2_Memory+225280)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+230912)), /* Bias */
+		((signed char *__restrict) (L2_Memory+231424)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+50176)), /* Out */
 		7, /* Norm */
 		7, /* NormBias */
 		7 /* NormMulBias */
@@ -7146,11 +7148,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
 	MNPerf[24] = gap_cl_readhwtimer();
 	Layer24(
-		(signed char *__restrict) (L2_Memory+50176), /* In2 */
-		(signed char *__restrict) (L3_Memory+2514944), /* In1 */
-		(signed char * __restrict__) (L2_Memory+200704), /* Bias */
-		(signed char *__restrict) (L2_Memory+201728), /* MulBias */
-		(signed char *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+50176)), /* In2 */
+		((signed char *__restrict) (L3_Memory+2514944)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+200704)), /* Bias */
+		((signed char *__restrict) (L2_Memory+201728)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+0)), /* Out */
 		7, /* Norm */
 		7, /* NormBias */
 		7 /* NormMulBias */
@@ -7168,11 +7170,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
 	MNPerf[25] = gap_cl_readhwtimer();
 	Layer25(
-		(signed char *__restrict) (L2_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+100352), /* Filter */
-		(signed char * __restrict__) (L2_Memory+109568), /* Bias */
-		(signed char *__restrict) (L2_Memory+110592), /* MulBias */
-		(signed char *__restrict) (L2_Memory+50176), /* Out */
+		((signed char *__restrict) (L2_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+100352)), /* Filter */
+		((signed char * __restrict__) (L2_Memory+109568)), /* Bias */
+		((signed char *__restrict) (L2_Memory+110592)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+50176)), /* Out */
 		2, /* Norm */
 		1, /* NormBias */
 		7 /* NormMulBias */
@@ -7184,11 +7186,11 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
 	MNPerf[26] = gap_cl_readhwtimer();
 	Layer26(
-		(signed char *__restrict) (L2_Memory+50176), /* In2 */
-		(signed char *__restrict) (L3_Memory+3039232), /* In1 */
-		(signed char * __restrict__) (L2_Memory+116736), /* Bias */
-		(signed char *__restrict) (L2_Memory+117760), /* MulBias */
-		(signed char *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+50176)), /* In2 */
+		((signed char *__restrict) (L3_Memory+3039232)), /* In1 */
+		((signed char * __restrict__) (L2_Memory+116736)), /* Bias */
+		((signed char *__restrict) (L2_Memory+117760)), /* MulBias */
+		((signed char *__restrict) (L2_Memory+0)), /* Out */
 		7, /* Norm */
 		7, /* NormBias */
 		7 /* NormMulBias */
@@ -7198,18 +7200,18 @@ int MobileNetCNN(
 	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5402624), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 51200), 2000, 0, &Uchan0);
 	MNPerf[27] = gap_cl_readhwtimer();
 	Layer27(
-		(signed char *__restrict) (L2_Memory+0), /* In */
-		(signed char *__restrict) (L2_Memory+50176) /* Out */
+		((signed char *__restrict) (L2_Memory+0)), /* In */
+		((signed char *__restrict) (L2_Memory+50176)) /* Out */
 	);
 	MNPerf[27] = gap_cl_readhwtimer() - MNPerf[27];
 	/* Waiting completion of transfer of BL28 using event 0 */
 	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
 	MNPerf[28] = gap_cl_readhwtimer();
 	Layer28(
-		(signed char *__restrict) (L2_Memory+50176), /* In */
-		(signed char *__restrict) (L3_Memory+4087808), /* Filter */
-		(short int * __restrict__) (L2_Memory+51200), /* Bias */
-		(short int *__restrict) (L2_Memory+0), /* Out */
+		((signed char *__restrict) (L2_Memory+50176)), /* In */
+		((signed char *__restrict) (L3_Memory+4087808)), /* Filter */
+		((short int * __restrict__) (L2_Memory+51200)), /* Bias */
+		((short int *__restrict) (L2_Memory+0)), /* Out */
 		0, /* Norm */
 		0 /* NormBias */
 	);

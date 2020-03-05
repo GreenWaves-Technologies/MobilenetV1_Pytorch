@@ -279,7 +279,7 @@ class mobilenet_quant_devel(nn.Module):
 
 
 
-def mobilenet(type_quant= None, activ_bits =None, weight_bits= None, activ_type='hardtanh',  width_mult=1.0, input_dim = 224,**kwargs):
+def mobilenet(type_quant= None, activ_bits =None, weight_bits= None, activ_type='hardtanh',  width_mult=1.0, input_dim = 224, pretrained=True, **kwargs):
     print(','.join('{0}={1!r}'.format(k,v) for k,v in kwargs.items()))
 
     print(activ_bits, weight_bits, type_quant)
@@ -287,11 +287,13 @@ def mobilenet(type_quant= None, activ_bits =None, weight_bits= None, activ_type=
 
     if type_quant in ['PerLayerAsymMinMax','PerLayerSymPACT','PerLayerAsymPACT','PerChannelsAsymMinMax']:
       model = mobilenet_quant_devel(width_mult, input_dim, activ_bits, weight_bits, 'real')
-      preload_mobilenet_tf( model , input_dim, width_mult)
+      if pretrained:
+        preload_mobilenet_tf( model , input_dim, width_mult)
       return model
 
     else:
       model = mobilenet_real(width_mult, input_dim)
-      preload_mobilenet_tf( model , input_dim, width_mult)
+      if pretrained:
+        preload_mobilenet_tf( model , input_dim, width_mult)
       return model
 

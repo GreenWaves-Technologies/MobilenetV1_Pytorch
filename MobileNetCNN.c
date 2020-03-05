@@ -1,19 +1,3 @@
-/*
- * Copyright 2019 GreenWaves Technologies, SAS
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 void MobileNetCNN(){
 	CNN_GenControl_T CtrlH;
 	CNN_InitGenCtrl(&CtrlH);
@@ -171,15 +155,15 @@ void MobileNetCNN(){
 	);
 	AddNode("Layer0",Bindings(8,GNodeArg(GNA_IN, "In", 0),GNodeArg(GNA_IN, "FL0", 0),GNodeArg(GNA_IN, "BL0", 0),GNodeArg(GNA_IN, "ML0", 0),GNodeArg(GNA_OUT, "OutL0", 0),Imm(9),Imm(11),Imm(7) ));
 	AddNode("Layer1",Bindings(8,GNodeArg(GNA_IN, "OutL0", 0),GNodeArg(GNA_IN, "FL1", 0),GNodeArg(GNA_IN, "BL1", 0),GNodeArg(GNA_IN, "ML1", 0),GNodeArg(GNA_OUT, "OutL1", 0),Imm(2),Imm(1),Imm(7) ));
-	AddNode("Layer2",Bindings(8,GNodeArg(GNA_IN, "OutL1", 0),GNodeArg(GNA_IN, "FL2", 0),GNodeArg(GNA_IN, "BL2", 0),GNodeArg(GNA_IN, "ML2", 0),GNodeArg(GNA_OUT, "OutL2", 0),Imm(6),Imm(5),Imm(7) ));
+	AddNode("Layer2",Bindings(8,GNodeArg(GNA_IN, "OutL1", 0),GNodeArg(GNA_IN, "FL2", 0),GNodeArg(GNA_IN, "BL2", 0),GNodeArg(GNA_IN, "ML2", 0),GNodeArg(GNA_OUT, "OutL2", 0),Imm(6),Imm(7),Imm(7) ));
 	AddNode("Layer3",Bindings(8,GNodeArg(GNA_IN, "OutL2", 0),GNodeArg(GNA_IN, "FL3", 0),GNodeArg(GNA_IN, "BL3", 0),GNodeArg(GNA_IN, "ML3", 0),GNodeArg(GNA_OUT, "OutL3", 0),Imm(1),Imm(0),Imm(7) ));
-	AddNode("Layer4",Bindings(8,GNodeArg(GNA_IN, "OutL3", 0),GNodeArg(GNA_IN, "FL4", 0),GNodeArg(GNA_IN, "BL4", 0),GNodeArg(GNA_IN, "ML4", 0),GNodeArg(GNA_OUT, "OutL4", 0),Imm(6),Imm(5),Imm(7) ));
+	AddNode("Layer4",Bindings(8,GNodeArg(GNA_IN, "OutL3", 0),GNodeArg(GNA_IN, "FL4", 0),GNodeArg(GNA_IN, "BL4", 0),GNodeArg(GNA_IN, "ML4", 0),GNodeArg(GNA_OUT, "OutL4", 0),Imm(6),Imm(7),Imm(7) ));
 	AddNode("Layer5",Bindings(8,GNodeArg(GNA_IN, "OutL4", 0),GNodeArg(GNA_IN, "FL5", 0),GNodeArg(GNA_IN, "BL5", 0),GNodeArg(GNA_IN, "ML5", 0),GNodeArg(GNA_OUT, "OutL5", 0),Imm(4),Imm(2),Imm(7) ));
-	AddNode("Layer6",Bindings(8,GNodeArg(GNA_IN, "OutL5", 0),GNodeArg(GNA_IN, "FL6", 0),GNodeArg(GNA_IN, "BL6", 0),GNodeArg(GNA_IN, "ML6", 0),GNodeArg(GNA_OUT, "OutL6", 0),Imm(6),Imm(5),Imm(7) ));
+	AddNode("Layer6",Bindings(8,GNodeArg(GNA_IN, "OutL5", 0),GNodeArg(GNA_IN, "FL6", 0),GNodeArg(GNA_IN, "BL6", 0),GNodeArg(GNA_IN, "ML6", 0),GNodeArg(GNA_OUT, "OutL6", 0),Imm(6),Imm(7),Imm(7) ));
 	AddNode("Layer7",Bindings(8,GNodeArg(GNA_IN, "OutL6", 0),GNodeArg(GNA_IN, "FL7", 0),GNodeArg(GNA_IN, "BL7", 0),GNodeArg(GNA_IN, "ML7", 0),GNodeArg(GNA_OUT, "OutL7", 0),Imm(6),Imm(5),Imm(7) ));
-	AddNode("Layer8",Bindings(8,GNodeArg(GNA_IN, "OutL7", 0),GNodeArg(GNA_IN, "FL8", 0),GNodeArg(GNA_IN, "BL8", 0),GNodeArg(GNA_IN, "ML8", 0),GNodeArg(GNA_OUT, "OutL8", 0),Imm(6),Imm(5),Imm(7) ));
+	AddNode("Layer8",Bindings(8,GNodeArg(GNA_IN, "OutL7", 0),GNodeArg(GNA_IN, "FL8", 0),GNodeArg(GNA_IN, "BL8", 0),GNodeArg(GNA_IN, "ML8", 0),GNodeArg(GNA_OUT, "OutL8", 0),Imm(6),Imm(7),Imm(7) ));
 	AddNode("Layer9",Bindings(8,GNodeArg(GNA_IN, "OutL8", 0),GNodeArg(GNA_IN, "FL9", 0),GNodeArg(GNA_IN, "BL9", 0),GNodeArg(GNA_IN, "ML9", 0),GNodeArg(GNA_OUT, "OutL9", 0),Imm(5),Imm(4),Imm(7) ));
-	AddNode("Layer10",Bindings(8,GNodeArg(GNA_IN, "OutL9", 0),GNodeArg(GNA_IN, "FL10", 0),GNodeArg(GNA_IN, "BL10", 0),GNodeArg(GNA_IN, "ML10", 0),GNodeArg(GNA_OUT, "OutL10", 0),Imm(6),Imm(5),Imm(7) ));
+	AddNode("Layer10",Bindings(8,GNodeArg(GNA_IN, "OutL9", 0),GNodeArg(GNA_IN, "FL10", 0),GNodeArg(GNA_IN, "BL10", 0),GNodeArg(GNA_IN, "ML10", 0),GNodeArg(GNA_OUT, "OutL10", 0),Imm(6),Imm(7),Imm(7) ));
 	AddNode("Layer11",Bindings(8,GNodeArg(GNA_IN, "OutL10", 0),GNodeArg(GNA_IN, "FL11", 0),GNodeArg(GNA_IN, "BL11", 0),GNodeArg(GNA_IN, "ML11", 0),GNodeArg(GNA_OUT, "OutL11", 0),Imm(7),Imm(7),Imm(7) ));
 	AddNode("Layer12",Bindings(8,GNodeArg(GNA_IN, "OutL11", 0),GNodeArg(GNA_IN, "FL12", 0),GNodeArg(GNA_IN, "BL12", 0),GNodeArg(GNA_IN, "ML12", 0),GNodeArg(GNA_OUT, "OutL12", 0),Imm(7),Imm(7),Imm(7) ));
 	AddNode("Layer13",Bindings(8,GNodeArg(GNA_IN, "OutL12", 0),GNodeArg(GNA_IN, "FL13", 0),GNodeArg(GNA_IN, "BL13", 0),GNodeArg(GNA_IN, "ML13", 0),GNodeArg(GNA_OUT, "OutL13", 0),Imm(5),Imm(3),Imm(7) ));
@@ -189,9 +173,9 @@ void MobileNetCNN(){
 	AddNode("Layer17",Bindings(8,GNodeArg(GNA_IN, "OutL16", 0),GNodeArg(GNA_IN, "FL17", 0),GNodeArg(GNA_IN, "BL17", 0),GNodeArg(GNA_IN, "ML17", 0),GNodeArg(GNA_OUT, "OutL17", 0),Imm(5),Imm(4),Imm(7) ));
 	AddNode("Layer18",Bindings(8,GNodeArg(GNA_IN, "OutL17", 0),GNodeArg(GNA_IN, "FL18", 0),GNodeArg(GNA_IN, "BL18", 0),GNodeArg(GNA_IN, "ML18", 0),GNodeArg(GNA_OUT, "OutL18", 0),Imm(7),Imm(7),Imm(7) ));
 	AddNode("Layer19",Bindings(8,GNodeArg(GNA_IN, "OutL18", 0),GNodeArg(GNA_IN, "FL19", 0),GNodeArg(GNA_IN, "BL19", 0),GNodeArg(GNA_IN, "ML19", 0),GNodeArg(GNA_OUT, "OutL19", 0),Imm(5),Imm(4),Imm(7) ));
-	AddNode("Layer20",Bindings(8,GNodeArg(GNA_IN, "OutL19", 0),GNodeArg(GNA_IN, "FL20", 0),GNodeArg(GNA_IN, "BL20", 0),GNodeArg(GNA_IN, "ML20", 0),GNodeArg(GNA_OUT, "OutL20", 0),Imm(6),Imm(5),Imm(7) ));
+	AddNode("Layer20",Bindings(8,GNodeArg(GNA_IN, "OutL19", 0),GNodeArg(GNA_IN, "FL20", 0),GNodeArg(GNA_IN, "BL20", 0),GNodeArg(GNA_IN, "ML20", 0),GNodeArg(GNA_OUT, "OutL20", 0),Imm(6),Imm(7),Imm(7) ));
 	AddNode("Layer21",Bindings(8,GNodeArg(GNA_IN, "OutL20", 0),GNodeArg(GNA_IN, "FL21", 0),GNodeArg(GNA_IN, "BL21", 0),GNodeArg(GNA_IN, "ML21", 0),GNodeArg(GNA_OUT, "OutL21", 0),Imm(6),Imm(5),Imm(7) ));
-	AddNode("Layer22",Bindings(8,GNodeArg(GNA_IN, "OutL21", 0),GNodeArg(GNA_IN, "FL22", 0),GNodeArg(GNA_IN, "BL22", 0),GNodeArg(GNA_IN, "ML22", 0),GNodeArg(GNA_OUT, "OutL22", 0),Imm(8),Imm(9),Imm(7) ));
+	AddNode("Layer22",Bindings(8,GNodeArg(GNA_IN, "OutL21", 0),GNodeArg(GNA_IN, "FL22", 0),GNodeArg(GNA_IN, "BL22", 0),GNodeArg(GNA_IN, "ML22", 0),GNodeArg(GNA_OUT, "OutL22", 0),Imm(8),Imm(7),Imm(7) ));
 	AddNode("Layer23",Bindings(8,GNodeArg(GNA_IN, "OutL22", 0),GNodeArg(GNA_IN, "FL23", 0),GNodeArg(GNA_IN, "BL23", 0),GNodeArg(GNA_IN, "ML23", 0),GNodeArg(GNA_OUT, "OutL23", 0),Imm(7),Imm(7),Imm(7) ));
 	AddNode("Layer24",Bindings(8,GNodeArg(GNA_IN, "OutL23", 0),GNodeArg(GNA_IN, "FL24", 0),GNodeArg(GNA_IN, "BL24", 0),GNodeArg(GNA_IN, "ML24", 0),GNodeArg(GNA_OUT, "OutL24", 0),Imm(7),Imm(7),Imm(7) ));
 	AddNode("Layer25",Bindings(8,GNodeArg(GNA_IN, "OutL24", 0),GNodeArg(GNA_IN, "FL25", 0),GNodeArg(GNA_IN, "BL25", 0),GNodeArg(GNA_IN, "ML25", 0),GNodeArg(GNA_OUT, "OutL25", 0),Imm(2),Imm(1),Imm(7) ));

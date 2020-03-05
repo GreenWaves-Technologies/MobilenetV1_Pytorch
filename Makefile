@@ -68,6 +68,8 @@ GenTile: GenTileBuild
 
 model: GenTile
 
+all:: model
+
 clean::
 	$(RM) GenMobilenet MobilenetKernels.* GenMobilenetGraph
 

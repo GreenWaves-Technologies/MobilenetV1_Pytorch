@@ -112,7 +112,7 @@ def main():
 	if additional_config is not '':
 	    model_config = dict(model_config, **literal_eval(additional_config))	
 	model = models.__dict__[model_name]
-	model = model(**model_config)
+	model = model(**model_config, pretrained=False)
 	if model is None :
 	    print('ERROR: model is none')
 	    exit(1)
@@ -423,8 +423,11 @@ def main():
 
 	        # add node to the graph   
 	        NormMul = 7	# fixed
-	        Norm = N0 - NormMul                           
-	        NormBias = 2*Norm - N0_bias
+	        Norm = N0 - NormMul
+	        if ker_size[0]==1 and ker_size[1]==1:          
+	        	NormBias = N0_bias
+	        else:                  
+	        	NormBias = 2*Norm - N0_bias
 	        txt = 'AddNode("Layer{}",Bindings(8,GNodeArg(GNA_IN, "{}", 0),GNodeArg(GNA_IN, "FL{}", 0),GNodeArg(GNA_IN, "BL{}", 0),GNodeArg(GNA_IN, "ML{}", 0),GNodeArg(GNA_OUT, "{}", 0),Imm({}),Imm({}),Imm({}) ))'\
 	            .format(i_l,input_tensor,i_l,i_l,i_l,output_tensor,Norm, NormBias, NormMul)
 	        GraphNodes.append(txt)
