@@ -408,10 +408,20 @@ def main():
 	        txt = 'TCArgInfo ("signed char *__restrict", "ML{}",  ARG_SCOPE_GLOBAL, ARG_DIR_CONSTIN, 0,  AT_MEM_UNDEF, ConstInfo("{}", 1, 1, 1, 0))'.format( \
 	            i_l,folder_bindump+file_txt)
 	        WeightEdges.append(txt)    
-	        
+
+	        # add node to the graph   
+	        NormMul = 7	# fixed
+	        Norm = N0 - NormMul
+	        NormBias = N0_bias
+	        #if ker_size[0]==1 and ker_size[1]==1:          
+	        #	
+	        #else:                  
+	        #	NormBias = 2*Norm - N0_bias
+
 	        # convolution layer
-	        txt = 'CNN_ConvolutionMulBiasPoolReLU("Layer{}", &CtrlH, 1,1,1,1,1,1,1,1,0,1,{},{},{},{},{},{},{},{},{},{},{}, 1, KOP_NONE, 3,3, 1,1, 2,2, 1, KOP_RELU)'\
-	            .format(i_l,in_ch,out_ch,input_size[2],input_size[3],'KOP_CONV_DWDP' if is_dw else 'KOP_CONV_DP', \
+	        txt = 'CNN_ConvolutionMulBiasPoolReLU("Layer{}", &CtrlH, 1,1,1,1,1,{},{},{},{},{},1,1,1,0,1,{},{},{},{},{},{},{},{},{},{},{}, 1, KOP_NONE, 3,3, 1,1, 2,2, 1, KOP_RELU)'\
+	            .format(i_l,0,0,-NormBias,N0,0,\
+	            		in_ch,out_ch,input_size[2],input_size[3],'KOP_CONV_DWDP' if is_dw else 'KOP_CONV_DP', \
 	                   ker_size[0], ker_size[1], ker_dilation[0], ker_dilation[1], ker_stride[0], ker_stride[1] )        
 	        Layers.append(txt)
 	        
@@ -421,15 +431,9 @@ def main():
 	            .format(output_tensor)
 	        ActivEdges.append(txt)
 
-	        # add node to the graph   
-	        NormMul = 7	# fixed
-	        Norm = N0 - NormMul
-	        if ker_size[0]==1 and ker_size[1]==1:          
-	        	NormBias = N0_bias
-	        else:                  
-	        	NormBias = 2*Norm - N0_bias
-	        txt = 'AddNode("Layer{}",Bindings(8,GNodeArg(GNA_IN, "{}", 0),GNodeArg(GNA_IN, "FL{}", 0),GNodeArg(GNA_IN, "BL{}", 0),GNodeArg(GNA_IN, "ML{}", 0),GNodeArg(GNA_OUT, "{}", 0),Imm({}),Imm({}),Imm({}) ))'\
-	            .format(i_l,input_tensor,i_l,i_l,i_l,output_tensor,Norm, NormBias, NormMul)
+
+	        txt = 'AddNode("Layer{}",Bindings(5,GNodeArg(GNA_IN, "{}", 0),GNodeArg(GNA_IN, "FL{}", 0),GNodeArg(GNA_IN, "BL{}", 0),GNodeArg(GNA_IN, "ML{}", 0),GNodeArg(GNA_OUT, "{}", 0) ))'\
+	            .format(i_l,input_tensor,i_l,i_l,i_l,output_tensor)
 	        GraphNodes.append(txt)
 	        
 	        # 
@@ -457,7 +461,7 @@ def main():
 	            .format(i_l,folder_bindump+file_txt)
 	        WeightEdges.append(txt)    
 	        
-	        txt = 'CNN_LinearReLU("Layer{}",&CtrlH, 1,1,2,2, 1,1,1,1,{},{},KOP_LINEAR, KOP_NONE)'\
+	        txt = 'CNN_LinearReLU("Layer{}",&CtrlH, 1,1,2,2,0,0,0,0,1,1,1,1,{},{},KOP_LINEAR, KOP_NONE)'\
 	            .format(i_l,in_features,out_features )        
 	        Layers.append(txt)
 
@@ -466,8 +470,8 @@ def main():
 	            .format(output_tensor)
 	        WeightEdges.append(txt)
 
-	        txt = 'AddNode("Layer{}",Bindings(6,GNodeArg(GNA_IN, "{}", 0),GNodeArg(GNA_IN, "FL{}", 0),GNodeArg(GNA_IN, "BL{}", 0),GNodeArg(GNA_OUT, "{}", 0),Imm({}),Imm({})))'\
-	            .format(i_l,input_tensor,i_l,i_l,output_tensor,0, 0)
+	        txt = 'AddNode("Layer{}",Bindings(4,GNodeArg(GNA_IN, "{}", 0),GNodeArg(GNA_IN, "FL{}", 0),GNodeArg(GNA_IN, "BL{}", 0),GNodeArg(GNA_OUT, "{}", 0)))'\
+	            .format(i_l,input_tensor,i_l,i_l,output_tensor)
 	        GraphNodes.append(txt)
 	        
 	        input_tensor = output_tensor
@@ -478,7 +482,7 @@ def main():
 	    if item['pool'] is not None:
 	        pool = item['pool'][0]
 	        if type(pool) is nn.AvgPool2d:
-	            txt = 'CNN_PoolReLU("Layer{}",&CtrlH, 1,1, 1,1, {},{}, {},{},KOP_AVGPOOL,{},{}, 1,1,{},{}, 1, KOP_NONE)'\
+	            txt = 'CNN_PoolReLU("Layer{}",&CtrlH, 1,1,0,0, 1,1, {},{}, {},{},KOP_AVGPOOL,{},{}, 1,1,{},{}, 1, KOP_NONE)'\
 	                .format(i_l,input_size[1],input_size[1],input_size[2],input_size[3],pool.kernel_size, pool.kernel_size,\
 	                       pool.stride, pool.stride)        
 	            Layers.append(txt)  

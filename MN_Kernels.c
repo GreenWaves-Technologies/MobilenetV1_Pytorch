@@ -9,10 +9,7 @@ void  __attribute__ ((noinline)) Layer0(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 27328 bytes, L2 buffer: 12960 bytes */
@@ -22,8 +19,8 @@ void  __attribute__ ((noinline)) Layer0(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan2;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR2;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerSetBias_fpd_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 	KerConv_DP_fps_T S_KerArg1, *KerArg1 = &S_KerArg1;
 	KerDP_fps_T S_KerArg2, *KerArg2 = &S_KerArg2;
@@ -43,7 +40,7 @@ void  __attribute__ ((noinline)) Layer0(
 	unsigned int _LN_In, _LNN_In;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D1 Dim: 1][Tile0 Dim: 112][D0 Dim: 1]
+		[D1 Dim: Init: 32, Tiled: 1][Tile0 Dim: 112][D0 Dim: Init: 3, Tiled: 1]
 	Ker Arg: Out, Tiled Space: Tile0
 		Min Pipe Depth: -2, Max Pipe Depth: 0
 		KerArgItSpace: 112 logical tiles, 112 physical tiles
@@ -99,21 +96,20 @@ void  __attribute__ ((noinline)) Layer0(
 	KerArg0->H = (unsigned short int) (1);
 	KerArg0->OutFeatures = (unsigned short int) (32);
 	KerArg0->Bias = (signed char * __restrict__) (L1_Memory+4032);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
+	KerArg0->NormBias = (signed char) (7);
 	KerArg1->W = (unsigned short int) (224);
 	KerArg1->UsedW = (unsigned short int) (224);
 	KerArg1->InFeatures = (unsigned short int) (3);
 	KerArg1->OutFeatures = (unsigned short int) (32);
 	KerArg1->Out = (DP_fps_T * __restrict__) (L1_Memory+12992);
-	KerArg1->Norm = (unsigned char) (Norm);
+	KerArg1->Norm = (unsigned char) (0);
 	KerArg1->TotalInFeatures = (short int) (3);
 	KerArg1->Orientation = (unsigned char) (1);
 	KerArg2->In = (DP_fps_T * __restrict__) (L1_Memory+12992);
 	KerArg2->W = (unsigned short int) (112);
 	KerArg2->H = (unsigned short int) (1);
-	KerArg2->Norm = (unsigned char) (Norm);
-	KerArg2->NormBias = (unsigned char) (NormMulBias);
+	KerArg2->Norm = (unsigned char) (0);
+	KerArg2->NormBias = (signed char) (16);
 	KerArg2->InFeatures = (unsigned short int) (32);
 	KerArg2->LB = (int) (0);
 	KerArg2->UB = (int) (127);
@@ -128,9 +124,9 @@ void  __attribute__ ((noinline)) Layer0(
 	_N_Filter=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Filter+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+4096+0), 864, 0, &DmaR_Evt3);
 	_NN_In=448; _SN_In=2016;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+7168+0), 2016, 50176, 672, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+448), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+7168+2016), 2016, 50176, 672, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+7168+0), 2016, 50176, 672, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+448), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+7168+2016), 2016, 50176, 672, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+7168+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 2016, 0, &DmaR_Evt4);
 	/*============================= End Read Tiles Prolog ===============================*/
 	{ /* Single iteration on D1 */
@@ -166,10 +162,10 @@ void  __attribute__ ((noinline)) Layer0(
 				}
 				/*============================= End Prepare Tiles ===================================*/
 				/*================================= Read Tiles ======================================*/
-				AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
+				AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
 				if (_SNN_In) {
 					AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+_NN_In), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+7168+2016*((D0Ind_Total)%2)),
-							_SNN_In, 50176, _LNN_In, 0, &Uchan1);
+							_SNN_In, 50176, _LNN_In, 0, &UchanHR1);
 				}
 				AT_L2_WAIT(0, &DmaR_Evt4); /* Wait previous DMA read In */
 				if (_SN_In) {
@@ -193,13 +189,13 @@ void  __attribute__ ((noinline)) Layer0(
 			} /* End iteration on D0 */
 			/*====================== Call Kernel LOC_D0_EPILOG =========================*/
 			KerArg2->Out = (signed char * __restrict__) (L1_Memory+5824+3584*((T0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg2);
-			__CALL(KerDPMulBiasScalar_fps, KerArg2);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg2);
+			__CALL(KerDPMulBias_fps, KerArg2);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-			if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
+			if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
 			if (_SP_Out) AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+3584*((T0Ind_Total+-1)%2)),
-						_SP_Out, 12544, _LP_Out, 1, &Uchan2);
+						_SP_Out, 12544, _LP_Out, 1, &UchanHR2);
 			AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+3584*((T0Ind_Total)%2)), ((AT_L2_INT_ADDR_TYPE) L1_Memory+5824+3584*((T0Ind_Total)%2)),
 					_SC_Out, 1, &DmaW_Evt1);
 			/*============================= End Write Tiles =====================================*/
@@ -221,9 +217,9 @@ void  __attribute__ ((noinline)) Layer0(
 	} /* End iteration on D1 */
 	/*================================ Write Tiles Epilog ===============================*/
 	AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+3584*((T0Ind_Total+-1)%2)), _SP_Out, 12544, _LP_Out, 1, &Uchan2);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait current uDMA write Out */
+	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+3584*((T0Ind_Total+-1)%2)), _SP_Out, 12544, _LP_Out, 1, &UchanHR2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait current uDMA write Out */
 	/*============================ End Write Tiles Epilog ===============================*/
 }
 void  __attribute__ ((noinline)) Layer1(
@@ -231,10 +227,7 @@ void  __attribute__ ((noinline)) Layer1(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46768 bytes, L2 buffer: 25248 bytes */
@@ -244,8 +237,8 @@ void  __attribute__ ((noinline)) Layer1(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
-	AT_HYPERRAM_CL_EVENT Uchan2;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
+	AT_HYPERRAM_CL_EVENT UchanHR2;
 	KerConv_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 	KerDP_fps_T S_KerArg1, *KerArg1 = &S_KerArg1;
 
@@ -267,7 +260,7 @@ void  __attribute__ ((noinline)) Layer1(
 	unsigned int _LPP_Out, _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 4][Tile0 Dim: 19]
+		[D0 Dim: Init: 32, Tiled: 4][Tile0 Dim: 19]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 2
 		KerArgItSpace: 76 logical tiles, 76 physical tiles
@@ -323,21 +316,21 @@ void  __attribute__ ((noinline)) Layer1(
 	KerArg0->InFeatures = (unsigned short int) (8);
 	KerArg0->OutFeatures = (unsigned short int) (8);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+25264);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (3);
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+25264);
 	KerArg1->W = (unsigned short int) (112);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (9);
 	KerArg1->InFeatures = (unsigned short int) (8);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
 	_NN_In=560; _SN_In=7168;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+10752+0), 6272, 12544, 784, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+560), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+10752+7168), 7168, 12544, 896, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+10752+0), 6272, 12544, 784, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+560), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+10752+7168), 7168, 12544, 896, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+10752+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 6272, 0, &DmaR_Evt1);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+14336+0), 8, 0, &DmaR_Evt2);
@@ -396,10 +389,10 @@ void  __attribute__ ((noinline)) Layer1(
 			}
 			/*============================= End Prepare Tiles ===================================*/
 			/*================================= Read Tiles ======================================*/
-			AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
+			AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
 			if (_SNN_In) {
 				AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+_NN_In), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+10752+7168*((T0Ind_Total)%2)),
-						_SNN_In, 12544, _LNN_In, 0, &Uchan1);
+						_SNN_In, 12544, _LNN_In, 0, &UchanHR1);
 			}
 			AT_L2_WAIT(0, &DmaR_Evt1); /* Wait previous DMA read In */
 			if (_SN_In) {
@@ -419,13 +412,13 @@ void  __attribute__ ((noinline)) Layer1(
 			KerArg1->H = (unsigned short int) (T0Ind_Last?4:6);
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+14512+5376*((T0Ind_Total)%2));
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+14352+8*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-			if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
+			if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
 			if (_SP_Out) AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+5376*((T0Ind_Total+-1)%2)),
-						_SP_Out, 12544, _LP_Out, 1, &Uchan2);
+						_SP_Out, 12544, _LP_Out, 1, &UchanHR2);
 			AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+5376*((T0Ind_Total)%2)), ((AT_L2_INT_ADDR_TYPE) L1_Memory+14512+5376*((T0Ind_Total)%2)),
 					_SC_Out, 1, &DmaW_Evt1);
 			/*============================= End Write Tiles =====================================*/
@@ -452,9 +445,9 @@ void  __attribute__ ((noinline)) Layer1(
 	} /* End iteration on D0 */
 	/*================================ Write Tiles Epilog ===============================*/
 	AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+5376*((T0Ind_Total+-1)%2)), _SP_Out, 12544, _LP_Out, 1, &Uchan2);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait current uDMA write Out */
+	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+5376*((T0Ind_Total+-1)%2)), _SP_Out, 12544, _LP_Out, 1, &UchanHR2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait current uDMA write Out */
 	/*============================ End Write Tiles Epilog ===============================*/
 }
 void  __attribute__ ((noinline)) Layer2(
@@ -462,10 +455,7 @@ void  __attribute__ ((noinline)) Layer2(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 47520 bytes, L2 buffer: 47424 bytes */
@@ -475,8 +465,8 @@ void  __attribute__ ((noinline)) Layer2(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
-	AT_HYPERRAM_CL_EVENT Uchan2;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
+	AT_HYPERRAM_CL_EVENT UchanHR2;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -549,15 +539,15 @@ void  __attribute__ ((noinline)) Layer2(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+0);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (13);
 	KerArg0->ColFirst = (unsigned char) (1);
 	/*================================= Read Tiles Prolog ===============================*/
 	_NN_In2=236; _SN_In2=7552;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+30208+0), 7552, 12544, 236, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In2 */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+236), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+30208+7552), 7552, 12544, 236, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+30208+0), 7552, 12544, 236, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In2 */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+236), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+30208+7552), 7552, 12544, 236, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+30208+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+32+0), 7552, 0, &DmaR_Evt1);
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) In1+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+45344), 2048, 0, &DmaR_Evt2);
 	AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
@@ -579,10 +569,10 @@ void  __attribute__ ((noinline)) Layer2(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In2 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In2 */
 		if (_SNN_In2) {
 			AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+_NN_In2), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+30208+7552*((T1Ind_Total)%2)),
-					_SNN_In2, 12544, _LNN_In2, 0, &Uchan1);
+					_SNN_In2, 12544, _LNN_In2, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt1); /* Wait previous DMA read In2 */
 		if (_SN_In2) {
@@ -604,9 +594,9 @@ void  __attribute__ ((noinline)) Layer2(
 		} /* End iteration on Tile0 */
 		/*================================= Write Tiles =====================================*/
 		if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
+		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
 		if (_SP_Out) AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+15104*((T1Ind_Total+-1)%2)),
-					_SP_Out, 12544, _LP_Out, 1, &Uchan2);
+					_SP_Out, 12544, _LP_Out, 1, &UchanHR2);
 		AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+15104*((T1Ind_Total)%2)), ((AT_L2_INT_ADDR_TYPE) L1_Memory+15136+15104*((T1Ind_Total)%2)),
 				_SC_Out, 1, &DmaW_Evt1);
 		/*============================= End Write Tiles =====================================*/
@@ -625,9 +615,9 @@ void  __attribute__ ((noinline)) Layer2(
 	} /* End iteration on Tile1 */
 	/*================================ Write Tiles Epilog ===============================*/
 	AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+15104*((T1Ind_Total+-1)%2)), _SP_Out, 12544, _LP_Out, 1, &Uchan2);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait current uDMA write Out */
+	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+15104*((T1Ind_Total+-1)%2)), _SP_Out, 12544, _LP_Out, 1, &UchanHR2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait current uDMA write Out */
 	/*============================ End Write Tiles Epilog ===============================*/
 }
 void  __attribute__ ((noinline)) Layer3(
@@ -635,10 +625,7 @@ void  __attribute__ ((noinline)) Layer3(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 45872 bytes, L2 buffer: 33312 bytes */
@@ -648,7 +635,7 @@ void  __attribute__ ((noinline)) Layer3(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerConv_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 	KerDP_fps_T S_KerArg1, *KerArg1 = &S_KerArg1;
 
@@ -670,7 +657,7 @@ void  __attribute__ ((noinline)) Layer3(
 	unsigned int _LN_In, _LNN_In;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 8][Tile0 Dim: 8]
+		[D0 Dim: Init: 64, Tiled: 8][Tile0 Dim: 8]
 	Ker Arg: Out, Tiled Space: Tile0
 		Min Pipe Depth: -1, Max Pipe Depth: 0
 		KerArgItSpace: 64 logical tiles, 64 physical tiles
@@ -726,14 +713,14 @@ void  __attribute__ ((noinline)) Layer3(
 	KerArg0->InFeatures = (unsigned short int) (8);
 	KerArg0->OutFeatures = (unsigned short int) (8);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+33328);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (2);
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+33328);
 	KerArg1->W = (unsigned short int) (56);
 	KerArg1->H = (unsigned short int) (7);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (8);
 	KerArg1->InFeatures = (unsigned short int) (8);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
@@ -747,9 +734,9 @@ void  __attribute__ ((noinline)) Layer3(
 	_N_Filter=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Filter+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+26912+0), 72, 0, &DmaR_Evt3);
 	_NN_In=1568; _SN_In=13440;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+0), 13440, 12544, 1680, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+1568), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+13440), 13440, 12544, 1680, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+0), 13440, 12544, 1680, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+1568), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+13440), 13440, 12544, 1680, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 13440, 0, &DmaR_Evt4);
 	/*============================= End Read Tiles Prolog ===============================*/
 	for (D0Ind=0; D0Ind<8; D0Ind++, D0Ind_Total++) { /* Iteration on D0 */
@@ -800,10 +787,10 @@ void  __attribute__ ((noinline)) Layer3(
 			}
 			/*============================= End Prepare Tiles ===================================*/
 			/*================================= Read Tiles ======================================*/
-			AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
+			AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
 			if (_SNN_In) {
 				AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+_NN_In), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+13440*((T0Ind_Total)%2)),
-						_SNN_In, 12544, _LNN_In, 0, &Uchan1);
+						_SNN_In, 12544, _LNN_In, 0, &UchanHR1);
 			}
 			AT_L2_WAIT(0, &DmaR_Evt4); /* Wait previous DMA read In */
 			if (_SN_In) {
@@ -822,8 +809,8 @@ void  __attribute__ ((noinline)) Layer3(
 			__CALL(KerParConvDWDP3x3Stride2_fps, KerArg0);
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+27056+3136*((T0Ind_Total)%2));
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+26896+8*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+27056+3136*((T0Ind_Total)%2)),
@@ -858,10 +845,7 @@ void  __attribute__ ((noinline)) Layer4(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 40768 bytes, L2 buffer: 40576 bytes */
@@ -871,7 +855,7 @@ void  __attribute__ ((noinline)) Layer4(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -944,9 +928,9 @@ void  __attribute__ ((noinline)) Layer4(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+0);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (13);
 	KerArg0->ColFirst = (unsigned char) (1);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
@@ -989,9 +973,9 @@ void  __attribute__ ((noinline)) Layer4(
 		} /* End iteration on Tile0 */
 		/*================================= Write Tiles =====================================*/
 		if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA write Out */
+		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA write Out */
 		if (_SP_Out) AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+10752*((T1Ind_Total+-1)%2)),
-					_SP_Out, 3136, _LP_Out, 1, &Uchan1);
+					_SP_Out, 3136, _LP_Out, 1, &UchanHR1);
 		AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+10752*((T1Ind_Total)%2)), ((AT_L2_INT_ADDR_TYPE) L1_Memory+10816+10752*((T1Ind_Total)%2)),
 				_SC_Out, 1, &DmaW_Evt1);
 		/*============================= End Write Tiles =====================================*/
@@ -1009,9 +993,9 @@ void  __attribute__ ((noinline)) Layer4(
 	} /* End iteration on Tile1 */
 	/*================================ Write Tiles Epilog ===============================*/
 	AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA write Out */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+10752*((T1Ind_Total+-1)%2)), _SP_Out, 3136, _LP_Out, 1, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait current uDMA write Out */
+	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA write Out */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+10752*((T1Ind_Total+-1)%2)), _SP_Out, 3136, _LP_Out, 1, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait current uDMA write Out */
 	/*============================ End Write Tiles Epilog ===============================*/
 }
 void  __attribute__ ((noinline)) Layer5(
@@ -1019,10 +1003,7 @@ void  __attribute__ ((noinline)) Layer5(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 48560 bytes, L2 buffer: 25248 bytes */
@@ -1032,8 +1013,8 @@ void  __attribute__ ((noinline)) Layer5(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
-	AT_HYPERRAM_CL_EVENT Uchan2;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
+	AT_HYPERRAM_CL_EVENT UchanHR2;
 	KerConv_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 	KerDP_fps_T S_KerArg1, *KerArg1 = &S_KerArg1;
 
@@ -1055,7 +1036,7 @@ void  __attribute__ ((noinline)) Layer5(
 	unsigned int _LPP_Out, _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 16][Tile0 Dim: 5]
+		[D0 Dim: Init: 128, Tiled: 16][Tile0 Dim: 5]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 2
 		KerArgItSpace: 80 logical tiles, 80 physical tiles
@@ -1111,21 +1092,21 @@ void  __attribute__ ((noinline)) Layer5(
 	KerArg0->InFeatures = (unsigned short int) (8);
 	KerArg0->OutFeatures = (unsigned short int) (8);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+25264);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (6);
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+25264);
 	KerArg1->W = (unsigned short int) (56);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (11);
 	KerArg1->InFeatures = (unsigned short int) (8);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
 	_NN_In=672; _SN_In=6720;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+0), 6272, 3136, 784, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+672), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+6720), 6720, 3136, 840, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+0), 6272, 3136, 784, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+672), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+6720), 6720, 3136, 840, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 6272, 0, &DmaR_Evt1);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+13440+0), 8, 0, &DmaR_Evt2);
@@ -1184,10 +1165,10 @@ void  __attribute__ ((noinline)) Layer5(
 			}
 			/*============================= End Prepare Tiles ===================================*/
 			/*================================= Read Tiles ======================================*/
-			AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
+			AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
 			if (_SNN_In) {
 				AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+_NN_In), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+6720*((T0Ind_Total)%2)),
-						_SNN_In, 3136, _LNN_In, 0, &Uchan1);
+						_SNN_In, 3136, _LNN_In, 0, &UchanHR1);
 			}
 			AT_L2_WAIT(0, &DmaR_Evt1); /* Wait previous DMA read In */
 			if (_SN_In) {
@@ -1207,13 +1188,13 @@ void  __attribute__ ((noinline)) Layer5(
 			KerArg1->H = (unsigned short int) (T0Ind_Last?4:13);
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+13616+5824*((T0Ind_Total)%2));
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+13456+8*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-			if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
+			if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
 			if (_SP_Out) AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+13440+5824*((T0Ind_Total+-1)%2)),
-						_SP_Out, 3136, _LP_Out, 1, &Uchan2);
+						_SP_Out, 3136, _LP_Out, 1, &UchanHR2);
 			AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+13440+5824*((T0Ind_Total)%2)), ((AT_L2_INT_ADDR_TYPE) L1_Memory+13616+5824*((T0Ind_Total)%2)),
 					_SC_Out, 1, &DmaW_Evt1);
 			/*============================= End Write Tiles =====================================*/
@@ -1240,9 +1221,9 @@ void  __attribute__ ((noinline)) Layer5(
 	} /* End iteration on D0 */
 	/*================================ Write Tiles Epilog ===============================*/
 	AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+13440+5824*((T0Ind_Total+-1)%2)), _SP_Out, 3136, _LP_Out, 1, &Uchan2);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait current uDMA write Out */
+	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+13440+5824*((T0Ind_Total+-1)%2)), _SP_Out, 3136, _LP_Out, 1, &UchanHR2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait current uDMA write Out */
 	/*============================ End Write Tiles Epilog ===============================*/
 }
 void  __attribute__ ((noinline)) Layer6(
@@ -1250,10 +1231,7 @@ void  __attribute__ ((noinline)) Layer6(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 41344 bytes, L2 buffer: 41088 bytes */
@@ -1263,8 +1241,8 @@ void  __attribute__ ((noinline)) Layer6(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
-	AT_HYPERRAM_CL_EVENT Uchan2;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
+	AT_HYPERRAM_CL_EVENT UchanHR2;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -1337,15 +1315,15 @@ void  __attribute__ ((noinline)) Layer6(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+0);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (13);
 	KerArg0->ColFirst = (unsigned char) (1);
 	/*================================= Read Tiles Prolog ===============================*/
 	_NN_In2=48; _SN_In2=6144;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+12288+0), 6144, 3136, 48, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In2 */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+48), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+12288+6144), 6144, 3136, 48, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+12288+0), 6144, 3136, 48, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In2 */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+48), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+12288+6144), 6144, 3136, 48, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+12288+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+128+0), 6144, 0, &DmaR_Evt1);
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) In1+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+24704), 16384, 0, &DmaR_Evt2);
 	AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
@@ -1367,10 +1345,10 @@ void  __attribute__ ((noinline)) Layer6(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In2 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In2 */
 		if (_SNN_In2) {
 			AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In2+_NN_In2), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+12288+6144*((T1Ind_Total)%2)),
-					_SNN_In2, 3136, _LNN_In2, 0, &Uchan1);
+					_SNN_In2, 3136, _LNN_In2, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt1); /* Wait previous DMA read In2 */
 		if (_SN_In2) {
@@ -1392,9 +1370,9 @@ void  __attribute__ ((noinline)) Layer6(
 		} /* End iteration on Tile0 */
 		/*================================= Write Tiles =====================================*/
 		if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
+		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
 		if (_SP_Out) AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+6144*((T1Ind_Total+-1)%2)),
-					_SP_Out, 3136, _LP_Out, 1, &Uchan2);
+					_SP_Out, 3136, _LP_Out, 1, &UchanHR2);
 		AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+6144*((T1Ind_Total)%2)), ((AT_L2_INT_ADDR_TYPE) L1_Memory+12416+6144*((T1Ind_Total)%2)),
 				_SC_Out, 1, &DmaW_Evt1);
 		/*============================= End Write Tiles =====================================*/
@@ -1413,9 +1391,9 @@ void  __attribute__ ((noinline)) Layer6(
 	} /* End iteration on Tile1 */
 	/*================================ Write Tiles Epilog ===============================*/
 	AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait previous uDMA write Out */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+6144*((T1Ind_Total+-1)%2)), _SP_Out, 3136, _LP_Out, 1, &Uchan2);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2); /* Wait current uDMA write Out */
+	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait previous uDMA write Out */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+6144*((T1Ind_Total+-1)%2)), _SP_Out, 3136, _LP_Out, 1, &UchanHR2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2); /* Wait current uDMA write Out */
 	/*============================ End Write Tiles Epilog ===============================*/
 }
 void  __attribute__ ((noinline)) Layer7(
@@ -1423,10 +1401,7 @@ void  __attribute__ ((noinline)) Layer7(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 48112 bytes, L2 buffer: 34656 bytes */
@@ -1436,7 +1411,7 @@ void  __attribute__ ((noinline)) Layer7(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerConv_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 	KerDP_fps_T S_KerArg1, *KerArg1 = &S_KerArg1;
 
@@ -1458,7 +1433,7 @@ void  __attribute__ ((noinline)) Layer7(
 	unsigned int _LN_In, _LNN_In;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 16][Tile0 Dim: 2]
+		[D0 Dim: Init: 128, Tiled: 16][Tile0 Dim: 2]
 	Ker Arg: Out, Tiled Space: Tile0
 		Min Pipe Depth: -1, Max Pipe Depth: 0
 		KerArgItSpace: 32 logical tiles, 32 physical tiles
@@ -1514,13 +1489,13 @@ void  __attribute__ ((noinline)) Layer7(
 	KerArg0->InFeatures = (unsigned short int) (8);
 	KerArg0->OutFeatures = (unsigned short int) (8);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+34672);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (7);
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+34672);
 	KerArg1->W = (unsigned short int) (28);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (13);
 	KerArg1->InFeatures = (unsigned short int) (8);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
@@ -1534,9 +1509,9 @@ void  __attribute__ ((noinline)) Layer7(
 	_N_Filter=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Filter+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+27808+0), 72, 0, &DmaR_Evt3);
 	_NN_In=1680; _SN_In=11648;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+0), 13888, 3136, 1736, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+1680), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+13888), 11648, 3136, 1456, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+0), 13888, 3136, 1736, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+1680), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+13888), 11648, 3136, 1456, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 13888, 0, &DmaR_Evt4);
 	/*============================= End Read Tiles Prolog ===============================*/
 	for (D0Ind=0; D0Ind<16; D0Ind++, D0Ind_Total++) { /* Iteration on D0 */
@@ -1587,10 +1562,10 @@ void  __attribute__ ((noinline)) Layer7(
 			}
 			/*============================= End Prepare Tiles ===================================*/
 			/*================================= Read Tiles ======================================*/
-			AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
+			AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
 			if (_SNN_In) {
 				AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+_NN_In), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+13888*((T0Ind_Total)%2)),
-						_SNN_In, 3136, _LNN_In, 0, &Uchan1);
+						_SNN_In, 3136, _LNN_In, 0, &UchanHR1);
 			}
 			AT_L2_WAIT(0, &DmaR_Evt4); /* Wait previous DMA read In */
 			if (_SN_In) {
@@ -1610,8 +1585,8 @@ void  __attribute__ ((noinline)) Layer7(
 			KerArg1->H = (unsigned short int) (T0Ind_Last?13:15);
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+27952+3360*((T0Ind_Total)%2));
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+27792+8*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+27952+3360*((T0Ind_Total)%2)),
@@ -1646,10 +1621,7 @@ void  __attribute__ ((noinline)) Layer8(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46496 bytes, L2 buffer: 46224 bytes */
@@ -1659,7 +1631,7 @@ void  __attribute__ ((noinline)) Layer8(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -1735,9 +1707,9 @@ void  __attribute__ ((noinline)) Layer8(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+0);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (13);
 	KerArg0->ColFirst = (unsigned char) (1);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In1=0;
@@ -1825,9 +1797,9 @@ void  __attribute__ ((noinline)) Layer8(
 		} /* End iteration on Tile0 */
 		/*================================= Write Tiles =====================================*/
 		if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA write Out */
+		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA write Out */
 		if (_SP_Out) AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+9216*((T1Ind_Total+-1)%2)),
-					_SP_Out, 784, _LP_Out, 1, &Uchan1);
+					_SP_Out, 784, _LP_Out, 1, &UchanHR1);
 		AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+9216*((T1Ind_Total)%2)), ((AT_L2_INT_ADDR_TYPE) L1_Memory+9344+9216*((T1Ind_Total)%2)),
 				_SC_Out, 1, &DmaW_Evt1);
 		/*============================= End Write Tiles =====================================*/
@@ -1845,9 +1817,9 @@ void  __attribute__ ((noinline)) Layer8(
 	} /* End iteration on Tile1 */
 	/*================================ Write Tiles Epilog ===============================*/
 	AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA write Out */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+9216*((T1Ind_Total+-1)%2)), _SP_Out, 784, _LP_Out, 1, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait current uDMA write Out */
+	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA write Out */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+9216*((T1Ind_Total+-1)%2)), _SP_Out, 784, _LP_Out, 1, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait current uDMA write Out */
 	/*============================ End Write Tiles Epilog ===============================*/
 }
 void  __attribute__ ((noinline)) Layer9(
@@ -1855,10 +1827,7 @@ void  __attribute__ ((noinline)) Layer9(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 49008 bytes, L2 buffer: 24800 bytes */
@@ -1868,7 +1837,7 @@ void  __attribute__ ((noinline)) Layer9(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerConv_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 	KerDP_fps_T S_KerArg1, *KerArg1 = &S_KerArg1;
 
@@ -1890,7 +1859,7 @@ void  __attribute__ ((noinline)) Layer9(
 	unsigned int _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 32][Tile0 Dim: 2]
+		[D0 Dim: Init: 256, Tiled: 32][Tile0 Dim: 2]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 2
 		KerArgItSpace: 64 logical tiles, 64 physical tiles
@@ -1946,21 +1915,21 @@ void  __attribute__ ((noinline)) Layer9(
 	KerArg0->InFeatures = (unsigned short int) (8);
 	KerArg0->OutFeatures = (unsigned short int) (8);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+24816);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (6);
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+24816);
 	KerArg1->W = (unsigned short int) (28);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (12);
 	KerArg1->InFeatures = (unsigned short int) (8);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
 	_NN_In=728; _SN_In=448;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+0), 6272, 784, 784, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+728), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+6272), 448, 784, 56, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+0), 6272, 784, 784, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+728), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+6272), 448, 784, 56, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+200704+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 6272, 0, &DmaR_Evt1);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+12544+0), 8, 0, &DmaR_Evt2);
@@ -2019,10 +1988,10 @@ void  __attribute__ ((noinline)) Layer9(
 			}
 			/*============================= End Prepare Tiles ===================================*/
 			/*================================= Read Tiles ======================================*/
-			AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
+			AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
 			if (_SNN_In) {
 				AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+_NN_In), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+6272*((T0Ind_Total)%2)),
-						_SNN_In, 784, _LNN_In, 0, &Uchan1);
+						_SNN_In, 784, _LNN_In, 0, &UchanHR1);
 			}
 			AT_L2_WAIT(0, &DmaR_Evt1); /* Wait previous DMA read In */
 			if (_SN_In) {
@@ -2042,8 +2011,8 @@ void  __attribute__ ((noinline)) Layer9(
 			KerArg1->H = (unsigned short int) (T0Ind_Last?1:27);
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+12720+6048*((T0Ind_Total)%2));
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+12560+8*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+12720+6048*((T0Ind_Total)%2)),
@@ -2078,10 +2047,7 @@ void  __attribute__ ((noinline)) Layer10(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 45472 bytes, L2 buffer: 45136 bytes */
@@ -2091,7 +2057,7 @@ void  __attribute__ ((noinline)) Layer10(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -2167,9 +2133,9 @@ void  __attribute__ ((noinline)) Layer10(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+0);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (13);
 	KerArg0->ColFirst = (unsigned char) (1);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In1=0;
@@ -2257,9 +2223,9 @@ void  __attribute__ ((noinline)) Layer10(
 		} /* End iteration on Tile0 */
 		/*================================= Write Tiles =====================================*/
 		if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA write Out */
+		if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA write Out */
 		if (_SP_Out) AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+6144*((T1Ind_Total+-1)%2)),
-					_SP_Out, 784, _LP_Out, 1, &Uchan1);
+					_SP_Out, 784, _LP_Out, 1, &UchanHR1);
 		AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+200704+6144*((T1Ind_Total)%2)), ((AT_L2_INT_ADDR_TYPE) L1_Memory+12544+6144*((T1Ind_Total)%2)),
 				_SC_Out, 1, &DmaW_Evt1);
 		/*============================= End Write Tiles =====================================*/
@@ -2277,9 +2243,9 @@ void  __attribute__ ((noinline)) Layer10(
 	} /* End iteration on Tile1 */
 	/*================================ Write Tiles Epilog ===============================*/
 	AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
-	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA write Out */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+6144*((T1Ind_Total+-1)%2)), _SP_Out, 784, _LP_Out, 1, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait current uDMA write Out */
+	if (_SPP_Out) AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA write Out */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Out+_P_Out), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+6144*((T1Ind_Total+-1)%2)), _SP_Out, 784, _LP_Out, 1, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait current uDMA write Out */
 	/*============================ End Write Tiles Epilog ===============================*/
 }
 void  __attribute__ ((noinline)) Layer11(
@@ -2287,10 +2253,7 @@ void  __attribute__ ((noinline)) Layer11(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 44256 bytes, L2 buffer: 31680 bytes */
@@ -2300,7 +2263,7 @@ void  __attribute__ ((noinline)) Layer11(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerConv_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 	KerDP_fps_T S_KerArg1, *KerArg1 = &S_KerArg1;
 
@@ -2322,7 +2285,7 @@ void  __attribute__ ((noinline)) Layer11(
 	unsigned int _LN_In, _LNN_In;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 16][Tile0 Dim: 1]
+		[D0 Dim: Init: 256, Tiled: 16][Tile0 Dim: 1]
 	Ker Arg: Out, Tiled Space: Tile0
 		Min Pipe Depth: -1, Max Pipe Depth: 0
 		KerArgItSpace: 16 logical tiles, 16 physical tiles
@@ -2378,15 +2341,15 @@ void  __attribute__ ((noinline)) Layer11(
 	KerArg0->InFeatures = (unsigned short int) (16);
 	KerArg0->OutFeatures = (unsigned short int) (16);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+31712);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (7);
 	KerArg0->Pad = (v4s) ((v4s){0,1,0,1});
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+31712);
 	KerArg1->W = (unsigned short int) (14);
 	KerArg1->H = (unsigned short int) (14);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (14);
 	KerArg1->InFeatures = (unsigned short int) (16);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
@@ -2400,9 +2363,9 @@ void  __attribute__ ((noinline)) Layer11(
 	_N_Filter=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Filter+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+25152+0), 144, 0, &DmaR_Evt3);
 	_NN_In=12544; _SN_In=12544;
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+50176+0), 12544, 784, 784, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
-	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+12544), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+50176+12544), 12544, 784, 784, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+50176+0), 12544, 784, 784, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
+	AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+12544), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+50176+12544), 12544, 784, 784, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+50176+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 12544, 0, &DmaR_Evt4);
 	/*============================= End Read Tiles Prolog ===============================*/
 	for (D0Ind=0; D0Ind<16; D0Ind++, D0Ind_Total++) { /* Iteration on D0 */
@@ -2449,10 +2412,10 @@ void  __attribute__ ((noinline)) Layer11(
 			}
 			/*============================= End Prepare Tiles ===================================*/
 			/*================================= Read Tiles ======================================*/
-			AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In */
+			AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In */
 			if (_SNN_In) {
 				AT_HYPERRAM_CL_COPY2D(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In+_NN_In), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+50176+12544*((T0Ind_Total)%2)),
-						_SNN_In, 784, _LNN_In, 0, &Uchan1);
+						_SNN_In, 784, _LNN_In, 0, &UchanHR1);
 			}
 			AT_L2_WAIT(0, &DmaR_Evt4); /* Wait previous DMA read In */
 			if (_SN_In) {
@@ -2470,8 +2433,8 @@ void  __attribute__ ((noinline)) Layer11(
 			__CALL(KerParConvDWDP3x3Stride2_fps, KerArg0);
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+25440+3136*((T0Ind_Total)%2));
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+25120+16*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+25440+3136*((T0Ind_Total)%2)),
@@ -2505,10 +2468,7 @@ void  __attribute__ ((noinline)) Layer12(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46816 bytes, L2 buffer: 46480 bytes */
@@ -2593,9 +2553,9 @@ void  __attribute__ ((noinline)) Layer12(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+36320);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (14);
 	KerArg0->ColFirst = (unsigned char) (0);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
@@ -2701,10 +2661,7 @@ void  __attribute__ ((noinline)) Layer13(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 38160 bytes, L2 buffer: 19296 bytes */
@@ -2735,7 +2692,7 @@ void  __attribute__ ((noinline)) Layer13(
 	unsigned int _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 22][Tile0 Dim: 1]
+		[D0 Dim: Init: 512, Tiled: 22][Tile0 Dim: 1]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 1
 		KerArgItSpace: 22 logical tiles, 22 physical tiles
@@ -2789,15 +2746,15 @@ void  __attribute__ ((noinline)) Layer13(
 	KerArg0->W = (unsigned short int) (14);
 	KerArg0->UsedW = (unsigned short int) (14);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+19344);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (7);
 	KerArg0->Pad = (v4s) ((v4s){1,1,1,1});
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+19344);
 	KerArg1->W = (unsigned short int) (14);
 	KerArg1->H = (unsigned short int) (14);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (12);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
@@ -2873,8 +2830,8 @@ void  __attribute__ ((noinline)) Layer13(
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+9936+4704*((T0Ind_Total)%2));
 			KerArg1->InFeatures = (unsigned short int) (D0Ind_Last?8:24);
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+9456+24*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+9936+4704*((T0Ind_Total)%2)),
@@ -2907,10 +2864,7 @@ void  __attribute__ ((noinline)) Layer14(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46880 bytes, L2 buffer: 46320 bytes */
@@ -2920,7 +2874,7 @@ void  __attribute__ ((noinline)) Layer14(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -2996,17 +2950,17 @@ void  __attribute__ ((noinline)) Layer14(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+34080);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (14);
 	KerArg0->ColFirst = (unsigned char) (0);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
 	AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) In2+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+34592+0), 6144, 196, 12, 0, &DmaR_Evt1);
 	_NN_In1=12288; _SN_In1=12288;
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+0), 12288, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+12288), 12288, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+0), 12288, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+12288), 12288, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+100352+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 12288, 0, &DmaR_Evt2);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+24576+0), 24, 0, &DmaR_Evt3);
@@ -3034,10 +2988,10 @@ void  __attribute__ ((noinline)) Layer14(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
 		if (_SNN_In1) {
 			AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+_NN_In1), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+12288*((T1Ind_Total)%2)),
-					_SNN_In1, 0, &Uchan1);
+					_SNN_In1, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
 		if (_SN_In1) {
@@ -3115,10 +3069,7 @@ void  __attribute__ ((noinline)) Layer15(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 38160 bytes, L2 buffer: 19296 bytes */
@@ -3149,7 +3100,7 @@ void  __attribute__ ((noinline)) Layer15(
 	unsigned int _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 22][Tile0 Dim: 1]
+		[D0 Dim: Init: 512, Tiled: 22][Tile0 Dim: 1]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 1
 		KerArgItSpace: 22 logical tiles, 22 physical tiles
@@ -3203,15 +3154,15 @@ void  __attribute__ ((noinline)) Layer15(
 	KerArg0->W = (unsigned short int) (14);
 	KerArg0->UsedW = (unsigned short int) (14);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+19344);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (7);
 	KerArg0->Pad = (v4s) ((v4s){1,1,1,1});
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+19344);
 	KerArg1->W = (unsigned short int) (14);
 	KerArg1->H = (unsigned short int) (14);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (12);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
@@ -3287,8 +3238,8 @@ void  __attribute__ ((noinline)) Layer15(
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+9936+4704*((T0Ind_Total)%2));
 			KerArg1->InFeatures = (unsigned short int) (D0Ind_Last?8:24);
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+9456+24*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+9936+4704*((T0Ind_Total)%2)),
@@ -3321,10 +3272,7 @@ void  __attribute__ ((noinline)) Layer16(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46880 bytes, L2 buffer: 46320 bytes */
@@ -3334,7 +3282,7 @@ void  __attribute__ ((noinline)) Layer16(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -3410,17 +3358,17 @@ void  __attribute__ ((noinline)) Layer16(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+34080);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (14);
 	KerArg0->ColFirst = (unsigned char) (0);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
 	AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) In2+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+34592+0), 6144, 196, 12, 0, &DmaR_Evt1);
 	_NN_In1=12288; _SN_In1=12288;
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+0), 12288, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288), 12288, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+0), 12288, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288), 12288, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+200704+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 12288, 0, &DmaR_Evt2);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+24576+0), 24, 0, &DmaR_Evt3);
@@ -3448,10 +3396,10 @@ void  __attribute__ ((noinline)) Layer16(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
 		if (_SNN_In1) {
 			AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+_NN_In1), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288*((T1Ind_Total)%2)),
-					_SNN_In1, 0, &Uchan1);
+					_SNN_In1, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
 		if (_SN_In1) {
@@ -3529,10 +3477,7 @@ void  __attribute__ ((noinline)) Layer17(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 38160 bytes, L2 buffer: 19296 bytes */
@@ -3563,7 +3508,7 @@ void  __attribute__ ((noinline)) Layer17(
 	unsigned int _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 22][Tile0 Dim: 1]
+		[D0 Dim: Init: 512, Tiled: 22][Tile0 Dim: 1]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 1
 		KerArgItSpace: 22 logical tiles, 22 physical tiles
@@ -3617,15 +3562,15 @@ void  __attribute__ ((noinline)) Layer17(
 	KerArg0->W = (unsigned short int) (14);
 	KerArg0->UsedW = (unsigned short int) (14);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+19344);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (6);
 	KerArg0->Pad = (v4s) ((v4s){1,1,1,1});
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+19344);
 	KerArg1->W = (unsigned short int) (14);
 	KerArg1->H = (unsigned short int) (14);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (12);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
@@ -3701,8 +3646,8 @@ void  __attribute__ ((noinline)) Layer17(
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+9936+4704*((T0Ind_Total)%2));
 			KerArg1->InFeatures = (unsigned short int) (D0Ind_Last?8:24);
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+9456+24*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+9936+4704*((T0Ind_Total)%2)),
@@ -3735,10 +3680,7 @@ void  __attribute__ ((noinline)) Layer18(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46880 bytes, L2 buffer: 46320 bytes */
@@ -3748,7 +3690,7 @@ void  __attribute__ ((noinline)) Layer18(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -3824,17 +3766,17 @@ void  __attribute__ ((noinline)) Layer18(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+34080);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (14);
 	KerArg0->ColFirst = (unsigned char) (0);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
 	AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) In2+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+34592+0), 6144, 196, 12, 0, &DmaR_Evt1);
 	_NN_In1=12288; _SN_In1=12288;
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+0), 12288, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+12288), 12288, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+0), 12288, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+12288), 12288, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+0+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 12288, 0, &DmaR_Evt2);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+24576+0), 24, 0, &DmaR_Evt3);
@@ -3862,10 +3804,10 @@ void  __attribute__ ((noinline)) Layer18(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
 		if (_SNN_In1) {
 			AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+_NN_In1), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+0+12288*((T1Ind_Total)%2)),
-					_SNN_In1, 0, &Uchan1);
+					_SNN_In1, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
 		if (_SN_In1) {
@@ -3943,10 +3885,7 @@ void  __attribute__ ((noinline)) Layer19(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 38160 bytes, L2 buffer: 19296 bytes */
@@ -3977,7 +3916,7 @@ void  __attribute__ ((noinline)) Layer19(
 	unsigned int _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 22][Tile0 Dim: 1]
+		[D0 Dim: Init: 512, Tiled: 22][Tile0 Dim: 1]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 1
 		KerArgItSpace: 22 logical tiles, 22 physical tiles
@@ -4031,15 +3970,15 @@ void  __attribute__ ((noinline)) Layer19(
 	KerArg0->W = (unsigned short int) (14);
 	KerArg0->UsedW = (unsigned short int) (14);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+19344);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (6);
 	KerArg0->Pad = (v4s) ((v4s){1,1,1,1});
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+19344);
 	KerArg1->W = (unsigned short int) (14);
 	KerArg1->H = (unsigned short int) (14);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (12);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
@@ -4115,8 +4054,8 @@ void  __attribute__ ((noinline)) Layer19(
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+9936+4704*((T0Ind_Total)%2));
 			KerArg1->InFeatures = (unsigned short int) (D0Ind_Last?8:24);
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+9456+24*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+9936+4704*((T0Ind_Total)%2)),
@@ -4149,10 +4088,7 @@ void  __attribute__ ((noinline)) Layer20(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46880 bytes, L2 buffer: 46320 bytes */
@@ -4162,7 +4098,7 @@ void  __attribute__ ((noinline)) Layer20(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -4238,17 +4174,17 @@ void  __attribute__ ((noinline)) Layer20(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+34080);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (13);
 	KerArg0->ColFirst = (unsigned char) (0);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
 	AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) In2+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+34592+0), 6144, 196, 12, 0, &DmaR_Evt1);
 	_NN_In1=12288; _SN_In1=12288;
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+0), 12288, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288), 12288, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+0), 12288, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288), 12288, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+200704+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 12288, 0, &DmaR_Evt2);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+24576+0), 24, 0, &DmaR_Evt3);
@@ -4276,10 +4212,10 @@ void  __attribute__ ((noinline)) Layer20(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
 		if (_SNN_In1) {
 			AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+_NN_In1), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288*((T1Ind_Total)%2)),
-					_SNN_In1, 0, &Uchan1);
+					_SNN_In1, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
 		if (_SN_In1) {
@@ -4357,10 +4293,7 @@ void  __attribute__ ((noinline)) Layer21(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 38160 bytes, L2 buffer: 19296 bytes */
@@ -4391,7 +4324,7 @@ void  __attribute__ ((noinline)) Layer21(
 	unsigned int _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 22][Tile0 Dim: 1]
+		[D0 Dim: Init: 512, Tiled: 22][Tile0 Dim: 1]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 1
 		KerArgItSpace: 22 logical tiles, 22 physical tiles
@@ -4445,15 +4378,15 @@ void  __attribute__ ((noinline)) Layer21(
 	KerArg0->W = (unsigned short int) (14);
 	KerArg0->UsedW = (unsigned short int) (14);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+19344);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (7);
 	KerArg0->Pad = (v4s) ((v4s){1,1,1,1});
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+19344);
 	KerArg1->W = (unsigned short int) (14);
 	KerArg1->H = (unsigned short int) (14);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (13);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
@@ -4529,8 +4462,8 @@ void  __attribute__ ((noinline)) Layer21(
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+9936+4704*((T0Ind_Total)%2));
 			KerArg1->InFeatures = (unsigned short int) (D0Ind_Last?8:24);
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+9456+24*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+9936+4704*((T0Ind_Total)%2)),
@@ -4563,10 +4496,7 @@ void  __attribute__ ((noinline)) Layer22(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46880 bytes, L2 buffer: 46320 bytes */
@@ -4576,7 +4506,7 @@ void  __attribute__ ((noinline)) Layer22(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -4652,17 +4582,17 @@ void  __attribute__ ((noinline)) Layer22(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+34080);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (15);
 	KerArg0->ColFirst = (unsigned char) (0);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
 	AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) In2+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+34592+0), 6144, 196, 12, 0, &DmaR_Evt1);
 	_NN_In1=12288; _SN_In1=12288;
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+0), 12288, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288), 12288, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+0), 12288, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288), 12288, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+200704+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 12288, 0, &DmaR_Evt2);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+24576+0), 24, 0, &DmaR_Evt3);
@@ -4690,10 +4620,10 @@ void  __attribute__ ((noinline)) Layer22(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
 		if (_SNN_In1) {
 			AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+_NN_In1), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+200704+12288*((T1Ind_Total)%2)),
-					_SNN_In1, 0, &Uchan1);
+					_SNN_In1, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
 		if (_SN_In1) {
@@ -4771,10 +4701,7 @@ void  __attribute__ ((noinline)) Layer23(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 45312 bytes, L2 buffer: 32640 bytes */
@@ -4805,7 +4732,7 @@ void  __attribute__ ((noinline)) Layer23(
 	unsigned int _LN_In;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 8][Tile0 Dim: 1]
+		[D0 Dim: Init: 512, Tiled: 8][Tile0 Dim: 1]
 	Ker Arg: Out, Tiled Space: Tile0
 		Min Pipe Depth: -1, Max Pipe Depth: 0
 		KerArgItSpace: 8 logical tiles, 8 physical tiles
@@ -4861,15 +4788,15 @@ void  __attribute__ ((noinline)) Layer23(
 	KerArg0->InFeatures = (unsigned short int) (64);
 	KerArg0->OutFeatures = (unsigned short int) (64);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+32768);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (7);
 	KerArg0->Pad = (v4s) ((v4s){0,1,0,1});
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+32768);
 	KerArg1->W = (unsigned short int) (7);
 	KerArg1->H = (unsigned short int) (7);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (14);
 	KerArg1->InFeatures = (unsigned short int) (64);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
@@ -4943,8 +4870,8 @@ void  __attribute__ ((noinline)) Layer23(
 			__CALL(KerParConvDWDP3x3Stride2_fps, KerArg0);
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+26496+3136*((T0Ind_Total)%2));
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+25216+64*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+26496+3136*((T0Ind_Total)%2)),
@@ -4977,10 +4904,7 @@ void  __attribute__ ((noinline)) Layer24(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 43920 bytes, L2 buffer: 43360 bytes */
@@ -4990,7 +4914,7 @@ void  __attribute__ ((noinline)) Layer24(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -5066,17 +4990,17 @@ void  __attribute__ ((noinline)) Layer24(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+27024);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (14);
 	KerArg0->ColFirst = (unsigned char) (0);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
 	AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) In2+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+27536+0), 8192, 49, 16, 0, &DmaR_Evt1);
 	_NN_In1=12288; _SN_In1=12288;
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+75264+0), 12288, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+75264+12288), 12288, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+75264+0), 12288, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+12288), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+75264+12288), 12288, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+75264+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 12288, 0, &DmaR_Evt2);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+24576+0), 24, 0, &DmaR_Evt3);
@@ -5104,10 +5028,10 @@ void  __attribute__ ((noinline)) Layer24(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
 		if (_SNN_In1) {
 			AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+_NN_In1), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+75264+12288*((T1Ind_Total)%2)),
-					_SNN_In1, 0, &Uchan1);
+					_SNN_In1, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
 		if (_SN_In1) {
@@ -5185,10 +5109,7 @@ void  __attribute__ ((noinline)) Layer25(
 		signed char * __restrict__ Filter,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 46368 bytes, L2 buffer: 24192 bytes */
@@ -5219,7 +5140,7 @@ void  __attribute__ ((noinline)) Layer25(
 	unsigned int _LP_Out, _LC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 10][Tile0 Dim: 1]
+		[D0 Dim: Init: 1024, Tiled: 10][Tile0 Dim: 1]
 	Ker Arg: In, Tiled Space: Tile0
 		Min Pipe Depth: 0, Max Pipe Depth: 1
 		KerArgItSpace: 10 logical tiles, 10 physical tiles
@@ -5273,15 +5194,15 @@ void  __attribute__ ((noinline)) Layer25(
 	KerArg0->W = (unsigned short int) (7);
 	KerArg0->UsedW = (unsigned short int) (7);
 	KerArg0->Out = (signed char * __restrict__) (L1_Memory+24416);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->TotalInFeatures = (short int) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->TotalInFeatures = (short int) (3);
 	KerArg0->Pad = (v4s) ((v4s){1,1,1,1});
 	KerArg0->Orientation = (unsigned char) (1);
 	KerArg1->In = (DP_fps_T * __restrict__) (L1_Memory+24416);
 	KerArg1->W = (unsigned short int) (7);
 	KerArg1->H = (unsigned short int) (7);
-	KerArg1->Norm = (unsigned char) (Norm);
-	KerArg1->NormBias = (unsigned char) (NormMulBias);
+	KerArg1->Norm = (unsigned char) (0);
+	KerArg1->NormBias = (signed char) (9);
 	KerArg1->LB = (int) (0);
 	KerArg1->UB = (int) (127);
 	/*================================= Read Tiles Prolog ===============================*/
@@ -5357,8 +5278,8 @@ void  __attribute__ ((noinline)) Layer25(
 			KerArg1->Out = (signed char * __restrict__) (L1_Memory+13440+5488*((T0Ind_Total)%2));
 			KerArg1->InFeatures = (unsigned short int) (D0Ind_Last?16:112);
 			KerArg1->MulBias = (signed char * __restrict__) (L1_Memory+11200+112*((D0Ind_Total)%2));
-			AT_FORK(gap_ncore(), (void *) KerDPMulBiasScalar_fps, (void *) KerArg1);
-			__CALL(KerDPMulBiasScalar_fps, KerArg1);
+			AT_FORK(gap_ncore(), (void *) KerDPMulBias_fps, (void *) KerArg1);
+			__CALL(KerDPMulBias_fps, KerArg1);
 			/*================================= Write Tiles =====================================*/
 			if (_SP_Out) AT_L2_WAIT(0, &DmaW_Evt1); /* Wait previous DMA write Out */
 			AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) Out+_C_Out), ((AT_L2_INT_ADDR_TYPE) L1_Memory+13440+5488*((T0Ind_Total)%2)),
@@ -5391,10 +5312,7 @@ void  __attribute__ ((noinline)) Layer26(
 		signed char * __restrict__ In1,
 		signed char * __restrict__ Bias,
 		signed char * __restrict__ MulBias,
-		signed char * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias,
-		unsigned int NormMulBias)
+		signed char * __restrict__ Out)
 
 {
 	/* Shared L1: 34608 bytes, L2 buffer: 33568 bytes */
@@ -5404,7 +5322,7 @@ void  __attribute__ ((noinline)) Layer26(
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaR_Evt4;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerMatMul_fps_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -5481,17 +5399,17 @@ void  __attribute__ ((noinline)) Layer26(
 	KerArg0->BufferColIn2 = (signed char * __restrict__) (L1_Memory+17200);
 	KerArg0->LB = (int) (0);
 	KerArg0->UB = (int) (127);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
-	KerArg0->NormMulBias = (unsigned char) (NormMulBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (7);
+	KerArg0->NormMulBias = (unsigned char) (14);
 	KerArg0->ColFirst = (unsigned char) (0);
 	/*================================= Read Tiles Prolog ===============================*/
 	_N_In2=0;
 	AT_L2_COPY2D(0, ((AT_L2_EXT_ADDR_TYPE) In2+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+18224+0), 8192, 49, 8, 0, &DmaR_Evt1);
 	_NN_In1=8192; _SN_In1=8192;
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+0), 8192, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+8192), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+8192), 8192, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+0), 8192, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+8192), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+8192), 8192, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+100352+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0+0), 8192, 0, &DmaR_Evt2);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+16384+0), 8, 0, &DmaR_Evt3);
@@ -5519,10 +5437,10 @@ void  __attribute__ ((noinline)) Layer26(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read In1 */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read In1 */
 		if (_SNN_In1) {
 			AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) In1+_NN_In1), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+100352+8192*((T1Ind_Total)%2)),
-					_SNN_In1, 0, &Uchan1);
+					_SNN_In1, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read In1 */
 		if (_SN_In1) {
@@ -5617,7 +5535,7 @@ void  __attribute__ ((noinline)) Layer27(
 	unsigned int _LN_In;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 3][Tile0 Dim: 1]
+		[D0 Dim: Init: 1024, Tiled: 3][Tile0 Dim: 1]
 	Ker Arg: Out, Tiled Space: Tile0
 		Min Pipe Depth: -1, Max Pipe Depth: 0
 		KerArgItSpace: 3 logical tiles, 3 physical tiles
@@ -5702,9 +5620,7 @@ void  __attribute__ ((noinline)) Layer28(
 		signed char * __restrict__ In,
 		signed char * __restrict__ Filter,
 		short int * __restrict__ Bias,
-		short int * __restrict__ Out,
-		unsigned int Norm,
-		unsigned int NormBias)
+		short int * __restrict__ Out)
 
 {
 	/* Shared L1: 33920 bytes, L2 buffer: 33920 bytes */
@@ -5713,7 +5629,7 @@ void  __attribute__ ((noinline)) Layer28(
 	AT_L2_EVENT DmaR_Evt2;
 	AT_L2_EVENT DmaR_Evt3;
 	AT_L2_EVENT DmaW_Evt1;
-	AT_HYPERRAM_CL_EVENT Uchan1;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
 	KerLinearLayerReLU_fps_fps_fp_T S_KerArg0, *KerArg0 = &S_KerArg0;
 
 	/* Iteration space related variables */
@@ -5728,7 +5644,7 @@ void  __attribute__ ((noinline)) Layer28(
 	unsigned int _SP_Out, _SC_Out;
 	/*============================= Ker Arg Iter Spaces =========================================
 	User Kernel Iteration Space:
-		[D0 Dim: 63][Tile0 Dim: 1]
+		[D0 Dim: Init: 1000, Tiled: 63][Tile0 Dim: 1]
 	Ker Arg: In, Tiled Space: Buffer
 		Min Pipe Depth: 0, Max Pipe Depth: 0
 		KerArgItSpace: 1 logical tiles, 1 physical tiles
@@ -5766,17 +5682,17 @@ void  __attribute__ ((noinline)) Layer28(
 	KerArg0->In = (signed char * __restrict__) (L1_Memory+0);
 	KerArg0->InSize = (unsigned short int) (1024);
 	KerArg0->TotalInSize = (unsigned short int) (1024);
-	KerArg0->Norm = (unsigned char) (Norm);
-	KerArg0->NormBias = (unsigned char) (NormBias);
+	KerArg0->Norm = (unsigned char) (0);
+	KerArg0->NormBias = (signed char) (0);
 	KerArg0->LB = (int) (-32768);
 	KerArg0->UB = (int) (32767);
 	/*================================= Read Tiles Prolog ===============================*/
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) In+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+0), 1024, 0, &DmaR_Evt1);
 	AT_L2_WAIT(0, &DmaR_Evt1); /* Wait previous DMA read In */
 	_NN_Filter=16384; _SN_Filter=16384;
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Filter+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+2000+0), 16384, 0, &Uchan1);
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read Filter */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Filter+16384), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+2000+16384), 16384, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Filter+0), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+2000+0), 16384, 0, &UchanHR1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read Filter */
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Filter+16384), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+2000+16384), 16384, 0, &UchanHR1);
 	AT_L2_COPY(0, ((AT_HYPERRAM_EXT_ADDR_TYPE) L2_Memory+2000+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+1024+0), 16384, 0, &DmaR_Evt2);
 	_N_Bias=0;
 	AT_L2_COPY(0, ((AT_L2_EXT_ADDR_TYPE) Bias+0), ((AT_L2_INT_ADDR_TYPE) L1_Memory+33792+0), 32, 0, &DmaR_Evt3);
@@ -5798,10 +5714,10 @@ void  __attribute__ ((noinline)) Layer28(
 		}
 		/*============================= End Prepare Tiles ===================================*/
 		/*================================= Read Tiles ======================================*/
-		AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1); /* Wait previous uDMA read Filter */
+		AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1); /* Wait previous uDMA read Filter */
 		if (_SNN_Filter) {
 			AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) Filter+_NN_Filter), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory+2000+16384*((D0Ind_Total)%2)),
-					_SNN_Filter, 0, &Uchan1);
+					_SNN_Filter, 0, &UchanHR1);
 		}
 		AT_L2_WAIT(0, &DmaR_Evt2); /* Wait previous DMA read Filter */
 		if (_SN_Filter) {
@@ -5849,8 +5765,8 @@ void  __attribute__ ((noinline)) Layer28(
 int MobileNetCNN_Construct()
 
 {
-	AT_HYPERFLASH_FS_FC_EVENT Uchan1;
-	AT_HYPERRAM_FC_EVENT Uchan2;
+	AT_HYPERFLASH_FS_FC_EVENT UchanHF1;
+	AT_HYPERRAM_FC_EVENT UchanHR2;
 	AT_HYPERFLASH_FS_CONF_T HyperFlashConf;
 	int Error;
 	AT_HYPERFLASH_FS_CONF_INIT(&HyperFlashConf, AT_MEM_L3_HFLASH, 0);
@@ -5864,10 +5780,10 @@ int MobileNetCNN_Construct()
 		int Size = 8192, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4162560+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5366784+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4162560+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5366784+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5877,10 +5793,10 @@ int MobileNetCNN_Construct()
 		int Size = 16384, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4136960+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5341184+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4136960+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5341184+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5890,10 +5806,10 @@ int MobileNetCNN_Construct()
 		int Size = 32768, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4104192+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5308416+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4104192+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5308416+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5903,10 +5819,10 @@ int MobileNetCNN_Construct()
 		int Size = 65536, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4038656+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5242880+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4038656+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5242880+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5916,10 +5832,10 @@ int MobileNetCNN_Construct()
 		int Size = 131072, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 3907584+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5111808+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 3907584+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5111808+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5929,10 +5845,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4216944+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5410768+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4216944+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5410768+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5942,10 +5858,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4217456+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5411280+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4217456+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5411280+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5955,10 +5871,10 @@ int MobileNetCNN_Construct()
 		int Size = 4608, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4170752+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5374976+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4170752+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5374976+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5968,10 +5884,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4217968+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5411792+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4217968+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5411792+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5981,10 +5897,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4218480+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5412304+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4218480+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5412304+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -5994,10 +5910,10 @@ int MobileNetCNN_Construct()
 		int Size = 262144, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 0+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 1204224+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 0+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 1204224+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6007,10 +5923,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4218992+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5412816+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4218992+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5412816+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6020,10 +5936,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4219504+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5413328+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4219504+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5413328+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6033,10 +5949,10 @@ int MobileNetCNN_Construct()
 		int Size = 4608, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4175360+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5379584+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4175360+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5379584+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6046,10 +5962,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4220016+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5413840+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4220016+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5413840+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6059,10 +5975,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4220528+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5414352+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4220528+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5414352+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6072,10 +5988,10 @@ int MobileNetCNN_Construct()
 		int Size = 262144, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 262144+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 1466368+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 262144+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 1466368+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6085,10 +6001,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4221040+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5414864+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4221040+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5414864+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6098,10 +6014,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4221552+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5415376+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4221552+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5415376+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6111,10 +6027,10 @@ int MobileNetCNN_Construct()
 		int Size = 4608, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4179968+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5384192+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4179968+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5384192+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6124,10 +6040,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4222064+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5415888+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4222064+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5415888+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6137,10 +6053,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4222576+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5416400+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4222576+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5416400+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6150,10 +6066,10 @@ int MobileNetCNN_Construct()
 		int Size = 262144, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 524288+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 1728512+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 524288+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 1728512+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6163,10 +6079,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4223088+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5416912+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4223088+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5416912+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6176,10 +6092,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4223600+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5417424+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4223600+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5417424+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6189,10 +6105,10 @@ int MobileNetCNN_Construct()
 		int Size = 4608, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4184576+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5388800+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4184576+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5388800+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6202,10 +6118,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4224112+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5417936+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4224112+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5417936+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6215,10 +6131,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4224624+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5418448+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4224624+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5418448+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6228,10 +6144,10 @@ int MobileNetCNN_Construct()
 		int Size = 262144, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 786432+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 1990656+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 786432+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 1990656+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6241,10 +6157,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4225136+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5418960+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4225136+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5418960+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6254,10 +6170,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4225648+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5419472+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4225648+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5419472+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6267,10 +6183,10 @@ int MobileNetCNN_Construct()
 		int Size = 4608, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4189184+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5393408+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4189184+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5393408+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6280,10 +6196,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4226160+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5419984+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4226160+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5419984+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6293,10 +6209,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4226672+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5420496+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4226672+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5420496+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6306,10 +6222,10 @@ int MobileNetCNN_Construct()
 		int Size = 262144, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 1048576+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 2252800+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 1048576+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 2252800+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6319,10 +6235,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4227184+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5421008+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4227184+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5421008+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6332,10 +6248,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4227696+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5421520+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4227696+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5421520+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6345,10 +6261,10 @@ int MobileNetCNN_Construct()
 		int Size = 4608, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4193792+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5398016+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4193792+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5398016+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6358,10 +6274,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4228208+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5422032+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4228208+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5422032+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6371,10 +6287,10 @@ int MobileNetCNN_Construct()
 		int Size = 512, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4228720+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5422544+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4228720+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5422544+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6384,10 +6300,10 @@ int MobileNetCNN_Construct()
 		int Size = 524288, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 1310720+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 2514944+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 1310720+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 2514944+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6397,10 +6313,10 @@ int MobileNetCNN_Construct()
 		int Size = 1024, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4209360+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5404624+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4209360+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5404624+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6410,10 +6326,10 @@ int MobileNetCNN_Construct()
 		int Size = 1024, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4210384+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5405648+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4210384+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5405648+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6423,10 +6339,10 @@ int MobileNetCNN_Construct()
 		int Size = 9216, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4153344+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5357568+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4153344+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5357568+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6436,10 +6352,10 @@ int MobileNetCNN_Construct()
 		int Size = 1024, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4211408+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5406672+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4211408+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5406672+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6449,10 +6365,10 @@ int MobileNetCNN_Construct()
 		int Size = 1024, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4212432+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5407696+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4212432+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5407696+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6462,10 +6378,10 @@ int MobileNetCNN_Construct()
 		int Size = 1048576, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 1835008+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 3039232+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 1835008+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 3039232+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6475,10 +6391,10 @@ int MobileNetCNN_Construct()
 		int Size = 1024, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4213456+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5408720+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4213456+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5408720+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6488,10 +6404,10 @@ int MobileNetCNN_Construct()
 		int Size = 1024, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4214480+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5409744+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4214480+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5409744+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6501,10 +6417,10 @@ int MobileNetCNN_Construct()
 		int Size = 1024000, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 2883584+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 4087808+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 2883584+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 4087808+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
@@ -6514,110 +6430,110 @@ int MobileNetCNN_Construct()
 		int Size = 2000, Base = 0;
 		while (Size) {
 			int Chunk = Min(Size, 1024);
-			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4205056+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &Uchan1);
-			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
-			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5402624+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &Uchan2);
-			AT_HYPERRAM_FC_WAIT(&HyperRam, &Uchan2);
+			AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4205056+Base), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 0, &UchanHF1);
+			AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
+			AT_HYPERRAM_FC_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5402624+Base), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), Chunk, 1, &UchanHR2);
+			AT_HYPERRAM_FC_WAIT(&HyperRam, &UchanHR2);
 			Base += Chunk;
 			Size -= Chunk;
 		}
 	}
 	/* Moving FL0, size 864 from HyperFlash at 4215504 to (size 864) L2 at 310016 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4215504), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 310016), 864, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4215504), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 310016), 864, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL0, size 32 from HyperFlash at 4232848 to (size 32) L2 at 315072 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232848), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315072), 32, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232848), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315072), 32, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML0, size 32 from HyperFlash at 4232880 to (size 32) L2 at 315104 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232880), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315104), 32, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232880), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315104), 32, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving FL1, size 288 from HyperFlash at 4229232 to (size 288) L2 at 311456 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4229232), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 311456), 288, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4229232), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 311456), 288, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL1, size 32 from HyperFlash at 4232912 to (size 32) L2 at 315136 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232912), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315136), 32, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232912), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315136), 32, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML1, size 32 from HyperFlash at 4232944 to (size 32) L2 at 315168 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232944), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315168), 32, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232944), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315168), 32, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving FL2, size 2048 from HyperFlash at 4203008 to (size 2048) L2 at 305664 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4203008), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 305664), 2048, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4203008), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 305664), 2048, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL2, size 64 from HyperFlash at 4232592 to (size 64) L2 at 314816 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232592), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314816), 64, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232592), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314816), 64, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML2, size 64 from HyperFlash at 4232656 to (size 64) L2 at 314880 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232656), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314880), 64, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232656), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314880), 64, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving FL3, size 576 from HyperFlash at 4216368 to (size 576) L2 at 310880 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4216368), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 310880), 576, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4216368), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 310880), 576, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL3, size 64 from HyperFlash at 4232720 to (size 64) L2 at 314944 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232720), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314944), 64, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232720), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314944), 64, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML3, size 64 from HyperFlash at 4232784 to (size 64) L2 at 315008 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232784), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315008), 64, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232784), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 315008), 64, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL4, size 128 from HyperFlash at 4231568 to (size 128) L2 at 313792 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231568), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313792), 128, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231568), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313792), 128, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML4, size 128 from HyperFlash at 4231696 to (size 128) L2 at 313920 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231696), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313920), 128, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231696), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313920), 128, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving FL5, size 1152 from HyperFlash at 4207056 to (size 1152) L2 at 307712 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4207056), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 307712), 1152, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4207056), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 307712), 1152, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL5, size 128 from HyperFlash at 4231824 to (size 128) L2 at 314048 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231824), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314048), 128, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231824), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314048), 128, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML5, size 128 from HyperFlash at 4231952 to (size 128) L2 at 314176 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231952), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314176), 128, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231952), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314176), 128, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL6, size 128 from HyperFlash at 4232080 to (size 128) L2 at 314304 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232080), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314304), 128, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232080), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314304), 128, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML6, size 128 from HyperFlash at 4232208 to (size 128) L2 at 314432 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232208), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314432), 128, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232208), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314432), 128, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving FL7, size 1152 from HyperFlash at 4208208 to (size 1152) L2 at 308864 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4208208), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 308864), 1152, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4208208), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 308864), 1152, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL7, size 128 from HyperFlash at 4232336 to (size 128) L2 at 314560 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232336), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314560), 128, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232336), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314560), 128, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML7, size 128 from HyperFlash at 4232464 to (size 128) L2 at 314688 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232464), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314688), 128, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4232464), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 314688), 128, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL8, size 256 from HyperFlash at 4229520 to (size 256) L2 at 311744 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4229520), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 311744), 256, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4229520), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 311744), 256, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML8, size 256 from HyperFlash at 4229776 to (size 256) L2 at 312000 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4229776), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 312000), 256, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4229776), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 312000), 256, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving FL9, size 2304 from HyperFlash at 4198400 to (size 2304) L2 at 301056 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4198400), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 301056), 2304, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4198400), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 301056), 2304, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL9, size 256 from HyperFlash at 4230032 to (size 256) L2 at 312256 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4230032), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 312256), 256, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4230032), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 312256), 256, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML9, size 256 from HyperFlash at 4230288 to (size 256) L2 at 312512 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4230288), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 312512), 256, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4230288), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 312512), 256, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL10, size 256 from HyperFlash at 4230544 to (size 256) L2 at 312768 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4230544), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 312768), 256, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4230544), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 312768), 256, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML10, size 256 from HyperFlash at 4230800 to (size 256) L2 at 313024 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4230800), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313024), 256, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4230800), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313024), 256, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving FL11, size 2304 from HyperFlash at 4200704 to (size 2304) L2 at 303360 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4200704), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 303360), 2304, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4200704), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 303360), 2304, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving BL11, size 256 from HyperFlash at 4231056 to (size 256) L2 at 313280 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231056), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313280), 256, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231056), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313280), 256, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	/* Moving ML11, size 256 from HyperFlash at 4231312 to (size 256) L2 at 313536 */
-	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231312), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313536), 256, 0, &Uchan1);
-	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &Uchan1);
+	AT_HYPERFLASH_FS_FC_COPY(&HyperFlash, ((AT_HYPERFLASH_FS_EXT_ADDR_TYPE) 0 + 4231312), ((AT_HYPERFLASH_FS_INT_ADDR_TYPE) L2_Memory + 313536), 256, 0, &UchanHF1);
+	AT_HYPERFLASH_FS_FC_WAIT(&HyperFlash, &UchanHF1);
 	Out = (short int *__restrict) (L2_Memory + 0);
 	return 0;
 }
@@ -6699,21 +6615,18 @@ int MobileNetCNN(
 		signed char *__restrict In)
 
 {
-	AT_HYPERRAM_CL_EVENT Uchan0;
-	AT_HYPERRAM_CL_EVENT Uchan1;
-	AT_HYPERRAM_CL_EVENT Uchan2;
-	AT_HYPERRAM_CL_EVENT Uchan3;
-	AT_HYPERRAM_CL_EVENT Uchan4;
+	AT_HYPERRAM_CL_EVENT UchanHR0;
+	AT_HYPERRAM_CL_EVENT UchanHR1;
+	AT_HYPERRAM_CL_EVENT UchanHR2;
+	AT_HYPERRAM_CL_EVENT UchanHR3;
+	AT_HYPERRAM_CL_EVENT UchanHR4;
 	MNPerf[0] = gap_cl_readhwtimer();
 	Layer0(
 		((signed char *__restrict) In), /* In */
 		((signed char *__restrict) (L2_Memory+310016)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+315072)), /* Bias */
 		((signed char *__restrict) (L2_Memory+315104)), /* MulBias */
-		((signed char *__restrict) (L3_Memory+0)), /* Out */
-		9, /* Norm */
-		11, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L3_Memory+0)) /* Out */
 	);
 	MNPerf[0] = gap_cl_readhwtimer() - MNPerf[0];
 	MNPerf[1] = gap_cl_readhwtimer();
@@ -6722,10 +6635,7 @@ int MobileNetCNN(
 		((signed char *__restrict) (L2_Memory+311456)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+315136)), /* Bias */
 		((signed char *__restrict) (L2_Memory+315168)), /* MulBias */
-		((signed char *__restrict) (L3_Memory+802816)), /* Out */
-		2, /* Norm */
-		1, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L3_Memory+802816)) /* Out */
 	);
 	MNPerf[1] = gap_cl_readhwtimer() - MNPerf[1];
 	MNPerf[2] = gap_cl_readhwtimer();
@@ -6734,470 +6644,395 @@ int MobileNetCNN(
 		((signed char *__restrict) (L2_Memory+305664)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+314816)), /* Bias */
 		((signed char *__restrict) (L2_Memory+314880)), /* MulBias */
-		((signed char *__restrict) (L3_Memory+0)), /* Out */
-		6, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L3_Memory+0)) /* Out */
 	);
 	MNPerf[2] = gap_cl_readhwtimer() - MNPerf[2];
 	/* Moving FL4, size 8192 from HyperRam at 5366784 to (size 8192) L2 at 227584 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5366784), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 227584), 8192, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5366784), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 227584), 8192, 0, &UchanHR0);
 	MNPerf[3] = gap_cl_readhwtimer();
 	Layer3(
 		((signed char *__restrict) (L3_Memory+0)), /* In */
 		((signed char *__restrict) (L2_Memory+310880)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+314944)), /* Bias */
 		((signed char *__restrict) (L2_Memory+315008)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+26880)), /* Out */
-		1, /* Norm */
-		0, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+26880)) /* Out */
 	);
 	MNPerf[3] = gap_cl_readhwtimer() - MNPerf[3];
 	/* Waiting completion of transfer of FL4 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	MNPerf[4] = gap_cl_readhwtimer();
 	Layer4(
 		((signed char *__restrict) (L2_Memory+26880)), /* In2 */
 		((signed char *__restrict) (L2_Memory+227584)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+313792)), /* Bias */
 		((signed char *__restrict) (L2_Memory+313920)), /* MulBias */
-		((signed char *__restrict) (L3_Memory+0)), /* Out */
-		6, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L3_Memory+0)) /* Out */
 	);
 	MNPerf[4] = gap_cl_readhwtimer() - MNPerf[4];
 	/* Moving FL6, size 16384 from HyperRam at 5341184 to (size 16384) L2 at 25088 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5341184), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 25088), 16384, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5341184), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 25088), 16384, 0, &UchanHR0);
 	MNPerf[5] = gap_cl_readhwtimer();
 	Layer5(
 		((signed char *__restrict) (L3_Memory+0)), /* In */
 		((signed char *__restrict) (L2_Memory+307712)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+314048)), /* Bias */
 		((signed char *__restrict) (L2_Memory+314176)), /* MulBias */
-		((signed char *__restrict) (L3_Memory+401408)), /* Out */
-		4, /* Norm */
-		2, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L3_Memory+401408)) /* Out */
 	);
 	MNPerf[5] = gap_cl_readhwtimer() - MNPerf[5];
 	/* Waiting completion of transfer of FL6 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	MNPerf[6] = gap_cl_readhwtimer();
 	Layer6(
 		((signed char *__restrict) (L3_Memory+401408)), /* In2 */
 		((signed char *__restrict) (L2_Memory+25088)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+314304)), /* Bias */
 		((signed char *__restrict) (L2_Memory+314432)), /* MulBias */
-		((signed char *__restrict) (L3_Memory+0)), /* Out */
-		6, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L3_Memory+0)) /* Out */
 	);
 	MNPerf[6] = gap_cl_readhwtimer() - MNPerf[6];
 	/* Moving FL8, size 32768 from HyperRam at 5308416 to (size 32768) L2 at 128128 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5308416), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 128128), 32768, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5308416), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 128128), 32768, 0, &UchanHR0);
 	MNPerf[7] = gap_cl_readhwtimer();
 	Layer7(
 		((signed char *__restrict) (L3_Memory+0)), /* In */
 		((signed char *__restrict) (L2_Memory+308864)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+314560)), /* Bias */
 		((signed char *__restrict) (L2_Memory+314688)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+27776)), /* Out */
-		6, /* Norm */
-		5, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+27776)) /* Out */
 	);
 	MNPerf[7] = gap_cl_readhwtimer() - MNPerf[7];
 	/* Waiting completion of transfer of FL8 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	MNPerf[8] = gap_cl_readhwtimer();
 	Layer8(
 		((signed char *__restrict) (L2_Memory+27776)), /* In2 */
 		((signed char *__restrict) (L2_Memory+128128)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+311744)), /* Bias */
 		((signed char *__restrict) (L2_Memory+312000)), /* MulBias */
-		((signed char *__restrict) (L3_Memory+0)), /* Out */
-		6, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L3_Memory+0)) /* Out */
 	);
 	MNPerf[8] = gap_cl_readhwtimer() - MNPerf[8];
 	/* Moving FL10, size 65536 from HyperRam at 5242880 to (size 65536) L2 at 213248 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5242880), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 213248), 65536, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5242880), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 213248), 65536, 0, &UchanHR0);
 	MNPerf[9] = gap_cl_readhwtimer();
 	Layer9(
 		((signed char *__restrict) (L3_Memory+0)), /* In */
 		((signed char *__restrict) (L2_Memory+301056)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+312256)), /* Bias */
 		((signed char *__restrict) (L2_Memory+312512)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+0)), /* Out */
-		5, /* Norm */
-		4, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[9] = gap_cl_readhwtimer() - MNPerf[9];
 	/* Waiting completion of transfer of FL10 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	MNPerf[10] = gap_cl_readhwtimer();
 	Layer10(
 		((signed char *__restrict) (L2_Memory+0)), /* In2 */
 		((signed char *__restrict) (L2_Memory+213248)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+312768)), /* Bias */
 		((signed char *__restrict) (L2_Memory+313024)), /* MulBias */
-		((signed char *__restrict) (L3_Memory+0)), /* Out */
-		6, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L3_Memory+0)) /* Out */
 	);
 	MNPerf[10] = gap_cl_readhwtimer() - MNPerf[10];
 	/* Moving FL12, size 131072 from HyperRam at 5111808 to (size 131072) L2 at 150528 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5111808), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 150528), 131072, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5111808), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 150528), 131072, 0, &UchanHR0);
 	MNPerf[11] = gap_cl_readhwtimer();
 	Layer11(
 		((signed char *__restrict) (L3_Memory+0)), /* In */
 		((signed char *__restrict) (L2_Memory+303360)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+313280)), /* Bias */
 		((signed char *__restrict) (L2_Memory+313536)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+0)), /* Out */
-		7, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[11] = gap_cl_readhwtimer() - MNPerf[11];
 	/* Moving BL12, size 512 from HyperRam at 5410768 to (size 512) L2 at 286208 using event 1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5410768), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 286208), 512, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5410768), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 286208), 512, 0, &UchanHR1);
 	/* Moving ML12, size 512 from HyperRam at 5411280 to (size 512) L2 at 286720 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5411280), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 286720), 512, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5411280), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 286720), 512, 0, &UchanHR2);
 	/* Moving FL13, size 4608 from HyperRam at 5374976 to (size 4608) L2 at 281600 using event 3 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5374976), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 281600), 4608, 0, &Uchan3);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5374976), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 281600), 4608, 0, &UchanHR3);
 	/* Waiting completion of transfer of FL12 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	/* Waiting completion of transfer of BL12 using event 1 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1);
 	/* Waiting completion of transfer of ML12 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	MNPerf[12] = gap_cl_readhwtimer();
 	Layer12(
 		((signed char *__restrict) (L2_Memory+0)), /* In2 */
 		((signed char *__restrict) (L2_Memory+150528)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+286208)), /* Bias */
 		((signed char *__restrict) (L2_Memory+286720)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+50176)), /* Out */
-		7, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+50176)) /* Out */
 	);
 	MNPerf[12] = gap_cl_readhwtimer() - MNPerf[12];
 	/* Moving BL13, size 512 from HyperRam at 5411792 to (size 512) L2 at 0 using event 1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5411792), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), 512, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5411792), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 0), 512, 0, &UchanHR1);
 	/* Moving ML13, size 512 from HyperRam at 5412304 to (size 512) L2 at 512 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5412304), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 512), 512, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5412304), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 512), 512, 0, &UchanHR2);
 	/* Waiting completion of transfer of FL13 using event 3 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan3);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR3);
 	/* Waiting completion of transfer of BL13 using event 1 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1);
 	/* Waiting completion of transfer of ML13 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	MNPerf[13] = gap_cl_readhwtimer();
 	Layer13(
 		((signed char *__restrict) (L2_Memory+50176)), /* In */
 		((signed char *__restrict) (L2_Memory+281600)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+0)), /* Bias */
 		((signed char *__restrict) (L2_Memory+512)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+150528)), /* Out */
-		5, /* Norm */
-		3, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+150528)) /* Out */
 	);
 	MNPerf[13] = gap_cl_readhwtimer() - MNPerf[13];
 	/* Moving BL14, size 512 from HyperRam at 5412816 to (size 512) L2 at 124928 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5412816), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 124928), 512, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5412816), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 124928), 512, 0, &UchanHR0);
 	/* Moving ML14, size 512 from HyperRam at 5413328 to (size 512) L2 at 125440 using event 1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5413328), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 125440), 512, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5413328), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 125440), 512, 0, &UchanHR1);
 	/* Moving FL15, size 4608 from HyperRam at 5379584 to (size 4608) L2 at 250880 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5379584), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 250880), 4608, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5379584), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 250880), 4608, 0, &UchanHR2);
 	/* Waiting completion of transfer of BL14 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	/* Waiting completion of transfer of ML14 using event 1 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1);
 	MNPerf[14] = gap_cl_readhwtimer();
 	Layer14(
 		((signed char *__restrict) (L2_Memory+150528)), /* In2 */
 		((signed char *__restrict) (L3_Memory+1204224)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+124928)), /* Bias */
 		((signed char *__restrict) (L2_Memory+125440)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+0)), /* Out */
-		7, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[14] = gap_cl_readhwtimer() - MNPerf[14];
 	/* Moving BL15, size 512 from HyperRam at 5413840 to (size 512) L2 at 200704 using event 1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5413840), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 200704), 512, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5413840), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 200704), 512, 0, &UchanHR1);
 	/* Moving ML15, size 512 from HyperRam at 5414352 to (size 512) L2 at 201216 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5414352), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 201216), 512, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5414352), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 201216), 512, 0, &UchanHR2);
 	/* Waiting completion of transfer of FL15 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	/* Waiting completion of transfer of BL15 using event 1 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1);
 	/* Waiting completion of transfer of ML15 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	MNPerf[15] = gap_cl_readhwtimer();
 	Layer15(
 		((signed char *__restrict) (L2_Memory+0)), /* In */
 		((signed char *__restrict) (L2_Memory+250880)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+200704)), /* Bias */
 		((signed char *__restrict) (L2_Memory+201216)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+100352)), /* Out */
-		5, /* Norm */
-		3, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+100352)) /* Out */
 	);
 	MNPerf[15] = gap_cl_readhwtimer() - MNPerf[15];
 	/* Moving BL16, size 512 from HyperRam at 5414864 to (size 512) L2 at 229888 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5414864), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 229888), 512, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5414864), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 229888), 512, 0, &UchanHR0);
 	/* Moving ML16, size 512 from HyperRam at 5415376 to (size 512) L2 at 230400 using event 1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5415376), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230400), 512, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5415376), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230400), 512, 0, &UchanHR1);
 	/* Moving FL17, size 4608 from HyperRam at 5384192 to (size 4608) L2 at 225280 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5384192), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 225280), 4608, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5384192), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 225280), 4608, 0, &UchanHR2);
 	/* Moving BL17, size 512 from HyperRam at 5415888 to (size 512) L2 at 230912 using event 3 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5415888), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230912), 512, 0, &Uchan3);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5415888), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230912), 512, 0, &UchanHR3);
 	/* Moving ML17, size 512 from HyperRam at 5416400 to (size 512) L2 at 231424 using event 4 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5416400), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 231424), 512, 0, &Uchan4);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5416400), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 231424), 512, 0, &UchanHR4);
 	/* Waiting completion of transfer of BL16 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	/* Waiting completion of transfer of ML16 using event 1 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1);
 	MNPerf[16] = gap_cl_readhwtimer();
 	Layer16(
 		((signed char *__restrict) (L2_Memory+100352)), /* In2 */
 		((signed char *__restrict) (L3_Memory+1466368)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+229888)), /* Bias */
 		((signed char *__restrict) (L2_Memory+230400)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+0)), /* Out */
-		7, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[16] = gap_cl_readhwtimer() - MNPerf[16];
 	/* Waiting completion of transfer of FL17 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	/* Waiting completion of transfer of BL17 using event 3 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan3);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR3);
 	/* Waiting completion of transfer of ML17 using event 4 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR4);
 	MNPerf[17] = gap_cl_readhwtimer();
 	Layer17(
 		((signed char *__restrict) (L2_Memory+0)), /* In */
 		((signed char *__restrict) (L2_Memory+225280)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+230912)), /* Bias */
 		((signed char *__restrict) (L2_Memory+231424)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+100352)), /* Out */
-		5, /* Norm */
-		4, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+100352)) /* Out */
 	);
 	MNPerf[17] = gap_cl_readhwtimer() - MNPerf[17];
 	/* Moving BL18, size 512 from HyperRam at 5416912 to (size 512) L2 at 24576 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5416912), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 24576), 512, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5416912), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 24576), 512, 0, &UchanHR0);
 	/* Moving ML18, size 512 from HyperRam at 5417424 to (size 512) L2 at 25088 using event 1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5417424), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 25088), 512, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5417424), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 25088), 512, 0, &UchanHR1);
 	/* Waiting completion of transfer of BL18 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	/* Waiting completion of transfer of ML18 using event 1 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1);
 	MNPerf[18] = gap_cl_readhwtimer();
 	Layer18(
 		((signed char *__restrict) (L2_Memory+100352)), /* In2 */
 		((signed char *__restrict) (L3_Memory+1728512)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+24576)), /* Bias */
 		((signed char *__restrict) (L2_Memory+25088)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+200704)), /* Out */
-		7, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+200704)) /* Out */
 	);
 	MNPerf[18] = gap_cl_readhwtimer() - MNPerf[18];
 	/* Moving FL19, size 4608 from HyperRam at 5388800 to (size 4608) L2 at 100352 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5388800), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 100352), 4608, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5388800), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 100352), 4608, 0, &UchanHR0);
 	/* Moving BL19, size 512 from HyperRam at 5417936 to (size 512) L2 at 104960 using event 1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5417936), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 104960), 512, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5417936), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 104960), 512, 0, &UchanHR1);
 	/* Moving ML19, size 512 from HyperRam at 5418448 to (size 512) L2 at 105472 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5418448), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 105472), 512, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5418448), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 105472), 512, 0, &UchanHR2);
 	/* Waiting completion of transfer of FL19 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	/* Waiting completion of transfer of BL19 using event 1 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1);
 	/* Waiting completion of transfer of ML19 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	MNPerf[19] = gap_cl_readhwtimer();
 	Layer19(
 		((signed char *__restrict) (L2_Memory+200704)), /* In */
 		((signed char *__restrict) (L2_Memory+100352)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+104960)), /* Bias */
 		((signed char *__restrict) (L2_Memory+105472)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+0)), /* Out */
-		5, /* Norm */
-		4, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[19] = gap_cl_readhwtimer() - MNPerf[19];
 	/* Moving BL20, size 512 from HyperRam at 5418960 to (size 512) L2 at 229888 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5418960), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 229888), 512, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5418960), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 229888), 512, 0, &UchanHR0);
 	/* Moving ML20, size 512 from HyperRam at 5419472 to (size 512) L2 at 230400 using event 1 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5419472), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230400), 512, 0, &Uchan1);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5419472), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230400), 512, 0, &UchanHR1);
 	/* Moving FL21, size 4608 from HyperRam at 5393408 to (size 4608) L2 at 225280 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5393408), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 225280), 4608, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5393408), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 225280), 4608, 0, &UchanHR2);
 	/* Moving BL21, size 512 from HyperRam at 5419984 to (size 512) L2 at 230912 using event 3 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5419984), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230912), 512, 0, &Uchan3);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5419984), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230912), 512, 0, &UchanHR3);
 	/* Moving ML21, size 512 from HyperRam at 5420496 to (size 512) L2 at 231424 using event 4 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5420496), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 231424), 512, 0, &Uchan4);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5420496), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 231424), 512, 0, &UchanHR4);
 	/* Waiting completion of transfer of BL20 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	/* Waiting completion of transfer of ML20 using event 1 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan1);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR1);
 	MNPerf[20] = gap_cl_readhwtimer();
 	Layer20(
 		((signed char *__restrict) (L2_Memory+0)), /* In2 */
 		((signed char *__restrict) (L3_Memory+1990656)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+229888)), /* Bias */
 		((signed char *__restrict) (L2_Memory+230400)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+100352)), /* Out */
-		6, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+100352)) /* Out */
 	);
 	MNPerf[20] = gap_cl_readhwtimer() - MNPerf[20];
 	/* Moving BL22, size 512 from HyperRam at 5421008 to (size 512) L2 at 229888 using event 3 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5421008), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 229888), 512, 0, &Uchan3);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5421008), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 229888), 512, 0, &UchanHR3);
 	/* Moving ML22, size 512 from HyperRam at 5421520 to (size 512) L2 at 230400 using event 4 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5421520), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230400), 512, 0, &Uchan4);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5421520), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230400), 512, 0, &UchanHR4);
 	/* Waiting completion of transfer of FL21 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	/* Waiting completion of transfer of BL21 using event 3 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan3);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR3);
 	/* Waiting completion of transfer of ML21 using event 4 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR4);
 	MNPerf[21] = gap_cl_readhwtimer();
 	Layer21(
 		((signed char *__restrict) (L2_Memory+100352)), /* In */
 		((signed char *__restrict) (L2_Memory+225280)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+230912)), /* Bias */
 		((signed char *__restrict) (L2_Memory+231424)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+0)), /* Out */
-		6, /* Norm */
-		5, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[21] = gap_cl_readhwtimer() - MNPerf[21];
 	/* Moving FL23, size 4608 from HyperRam at 5398016 to (size 4608) L2 at 225280 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5398016), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 225280), 4608, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5398016), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 225280), 4608, 0, &UchanHR2);
 	/* Moving BL23, size 512 from HyperRam at 5422032 to (size 512) L2 at 230912 using event 3 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5422032), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230912), 512, 0, &Uchan3);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5422032), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 230912), 512, 0, &UchanHR3);
 	/* Moving ML23, size 512 from HyperRam at 5422544 to (size 512) L2 at 231424 using event 4 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5422544), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 231424), 512, 0, &Uchan4);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5422544), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 231424), 512, 0, &UchanHR4);
 	/* Waiting completion of transfer of BL22 using event 3 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan3);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR3);
 	/* Waiting completion of transfer of ML22 using event 4 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR4);
 	MNPerf[22] = gap_cl_readhwtimer();
 	Layer22(
 		((signed char *__restrict) (L2_Memory+0)), /* In2 */
 		((signed char *__restrict) (L3_Memory+2252800)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+229888)), /* Bias */
 		((signed char *__restrict) (L2_Memory+230400)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+100352)), /* Out */
-		8, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+100352)) /* Out */
 	);
 	MNPerf[22] = gap_cl_readhwtimer() - MNPerf[22];
 	/* Moving BL24, size 1024 from HyperRam at 5404624 to (size 1024) L2 at 200704 using event 3 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5404624), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 200704), 1024, 0, &Uchan3);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5404624), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 200704), 1024, 0, &UchanHR3);
 	/* Moving ML24, size 1024 from HyperRam at 5405648 to (size 1024) L2 at 201728 using event 4 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5405648), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 201728), 1024, 0, &Uchan4);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5405648), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 201728), 1024, 0, &UchanHR4);
 	/* Waiting completion of transfer of FL23 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	/* Waiting completion of transfer of BL23 using event 3 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan3);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR3);
 	/* Waiting completion of transfer of ML23 using event 4 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR4);
 	MNPerf[23] = gap_cl_readhwtimer();
 	Layer23(
 		((signed char *__restrict) (L2_Memory+100352)), /* In */
 		((signed char *__restrict) (L2_Memory+225280)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+230912)), /* Bias */
 		((signed char *__restrict) (L2_Memory+231424)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+50176)), /* Out */
-		7, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+50176)) /* Out */
 	);
 	MNPerf[23] = gap_cl_readhwtimer() - MNPerf[23];
 	/* Moving FL25, size 9216 from HyperRam at 5357568 to (size 9216) L2 at 100352 using event 2 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5357568), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 100352), 9216, 0, &Uchan2);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5357568), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 100352), 9216, 0, &UchanHR2);
 	/* Moving BL25, size 1024 from HyperRam at 5406672 to (size 1024) L2 at 109568 using event 3 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5406672), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 109568), 1024, 0, &Uchan3);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5406672), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 109568), 1024, 0, &UchanHR3);
 	/* Moving ML25, size 1024 from HyperRam at 5407696 to (size 1024) L2 at 110592 using event 4 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5407696), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 110592), 1024, 0, &Uchan4);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5407696), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 110592), 1024, 0, &UchanHR4);
 	/* Waiting completion of transfer of BL24 using event 3 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan3);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR3);
 	/* Waiting completion of transfer of ML24 using event 4 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR4);
 	MNPerf[24] = gap_cl_readhwtimer();
 	Layer24(
 		((signed char *__restrict) (L2_Memory+50176)), /* In2 */
 		((signed char *__restrict) (L3_Memory+2514944)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+200704)), /* Bias */
 		((signed char *__restrict) (L2_Memory+201728)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+0)), /* Out */
-		7, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[24] = gap_cl_readhwtimer() - MNPerf[24];
 	/* Moving BL26, size 1024 from HyperRam at 5408720 to (size 1024) L2 at 116736 using event 3 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5408720), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 116736), 1024, 0, &Uchan3);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5408720), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 116736), 1024, 0, &UchanHR3);
 	/* Moving ML26, size 1024 from HyperRam at 5409744 to (size 1024) L2 at 117760 using event 4 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5409744), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 117760), 1024, 0, &Uchan4);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5409744), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 117760), 1024, 0, &UchanHR4);
 	/* Waiting completion of transfer of FL25 using event 2 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan2);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR2);
 	/* Waiting completion of transfer of BL25 using event 3 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan3);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR3);
 	/* Waiting completion of transfer of ML25 using event 4 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR4);
 	MNPerf[25] = gap_cl_readhwtimer();
 	Layer25(
 		((signed char *__restrict) (L2_Memory+0)), /* In */
 		((signed char *__restrict) (L2_Memory+100352)), /* Filter */
 		((signed char * __restrict__) (L2_Memory+109568)), /* Bias */
 		((signed char *__restrict) (L2_Memory+110592)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+50176)), /* Out */
-		2, /* Norm */
-		1, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+50176)) /* Out */
 	);
 	MNPerf[25] = gap_cl_readhwtimer() - MNPerf[25];
 	/* Waiting completion of transfer of BL26 using event 3 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan3);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR3);
 	/* Waiting completion of transfer of ML26 using event 4 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan4);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR4);
 	MNPerf[26] = gap_cl_readhwtimer();
 	Layer26(
 		((signed char *__restrict) (L2_Memory+50176)), /* In2 */
 		((signed char *__restrict) (L3_Memory+3039232)), /* In1 */
 		((signed char * __restrict__) (L2_Memory+116736)), /* Bias */
 		((signed char *__restrict) (L2_Memory+117760)), /* MulBias */
-		((signed char *__restrict) (L2_Memory+0)), /* Out */
-		7, /* Norm */
-		7, /* NormBias */
-		7 /* NormMulBias */
+		((signed char *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[26] = gap_cl_readhwtimer() - MNPerf[26];
 	/* Moving BL28, size 2000 from HyperRam at 5402624 to (size 2000) L2 at 51200 using event 0 */
-	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5402624), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 51200), 2000, 0, &Uchan0);
+	AT_HYPERRAM_CL_COPY(&HyperRam, ((AT_HYPERRAM_EXT_ADDR_TYPE) L3_Memory + 5402624), ((AT_HYPERRAM_INT_ADDR_TYPE) L2_Memory + 51200), 2000, 0, &UchanHR0);
 	MNPerf[27] = gap_cl_readhwtimer();
 	Layer27(
 		((signed char *__restrict) (L2_Memory+0)), /* In */
@@ -7205,15 +7040,13 @@ int MobileNetCNN(
 	);
 	MNPerf[27] = gap_cl_readhwtimer() - MNPerf[27];
 	/* Waiting completion of transfer of BL28 using event 0 */
-	AT_HYPERRAM_CL_WAIT(&HyperRam, &Uchan0);
+	AT_HYPERRAM_CL_WAIT(&HyperRam, &UchanHR0);
 	MNPerf[28] = gap_cl_readhwtimer();
 	Layer28(
 		((signed char *__restrict) (L2_Memory+50176)), /* In */
 		((signed char *__restrict) (L3_Memory+4087808)), /* Filter */
 		((short int * __restrict__) (L2_Memory+51200)), /* Bias */
-		((short int *__restrict) (L2_Memory+0)), /* Out */
-		0, /* Norm */
-		0 /* NormBias */
+		((short int *__restrict) (L2_Memory+0)) /* Out */
 	);
 	MNPerf[28] = gap_cl_readhwtimer() - MNPerf[28];
 	return 0;
