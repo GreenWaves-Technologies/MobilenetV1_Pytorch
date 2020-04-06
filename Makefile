@@ -42,11 +42,16 @@ APP_LDFLAGS +=  -flto -Wl,--gc-sections
 APP_CFLAGS += -w -Wno-maybe-uninitialized -Wno-unused-but-set-variable
 APP_CFLAGS += -I$(TILER_INC) -I$(MOBILENET_GEN_PATH) -Iutils/inc
 
-READFS_FILES = $(realpath MN_L3_Flash_Const.bin) $(realpath binFiles/L0_INPUT.bin)
-PLPBRIDGE_FLAGS += -f 
+
 
 export GAP_USE_OPENOCD=1
 io=host
+
+ifeq ($(ALREADY_FLASHED),)
+	READFS_FILES = $(realpath MN_L3_Flash_Const.bin) $(realpath binFiles/L0_INPUT.bin)
+	PLPBRIDGE_FLAGS += -f 
+endif
+
 
 
 # The double colon allows us to force this to occur before the imported all target
