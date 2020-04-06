@@ -178,7 +178,7 @@ int mobilenet()
   // Exit Test
   if (class == 144){
     printf("Test success\n");
-    return 0;
+    pmsis_exit(0);
   }
   else{
     printf("Test not success\n");

@@ -2,7 +2,7 @@ void MobileNetCNN(){
 	CNN_GenControl_T CtrlH;
 	CNN_InitGenCtrl(&CtrlH);
 	CNN_SetGenCtrl(&CtrlH, "EnableIm2Col", AT_OPT_ON);
-	CNN_SetGenCtrl(&CtrlH, "PADTYPE", PAD_BALANCED_RIGHT);
+	CNN_SetGenCtrl(&CtrlH, "PADTYPE", (void *) PAD_BALANCED_RIGHT);
 
 	CNN_ConvolutionMulBiasPoolReLU("Layer0", &CtrlH, 1,1,1,1,1,0,0,-7,16,0,1,1,1,0,1,3,32,224,224,KOP_CONV_DP,3,3,1,1,2,2, 1, KOP_NONE, 3,3, 1,1, 2,2, 1, KOP_RELU);
 	CNN_ConvolutionMulBiasPoolReLU("Layer1", &CtrlH, 1,1,1,1,1,0,0,-3,9,0,1,1,1,0,1,32,32,112,112,KOP_CONV_DWDP,3,3,1,1,1,1, 1, KOP_NONE, 3,3, 1,1, 2,2, 1, KOP_RELU);
