@@ -27,7 +27,12 @@ TILER_GENERATOR_PATH = $(TILER_PATH)/generators
 MOBILENET_GEN_PATH = $(TILER_GENERATOR_PATH)/CNN
 MOBILENET_KER_PATH = $(wildcard $(TILER_GENERATOR_PATH)/CNN/CNN_*.c)
 
-APP_SRCS = main.c MN_Kernels.c $(MOBILENET_KER_PATH)
+TILER_APP_SRCS = MobileNetModel.c $(MOBILENET_GEN_PATH)/CNN_Generators.c
+TILER_EXE = GenMobilenet
+
+TILER_USER_KERNELS = MN_Kernels.c 
+
+APP_SRCS = main.c $(TILER_USER_KERNELS) $(MOBILENET_KER_PATH)
 APP_SRCS += utils/src/dnn_utils.c
 APP_SRCS += utils/src/ili9341.c utils/src/font.c 
 APP_INC += $(TILER_INC) $(CNN_AT_PATH)
@@ -54,25 +59,21 @@ endif
 
 
 
-# The double colon allows us to force this to occur before the imported all target
-# Link model generation to all step
-all:: model
-
 # Build the code generator
-GenTileBuild:
-	gcc -o GenMobilenet $(USE_HARDWARE_CE) -Imbnets -I$(MOBILENET_GEN_PATH) -I$(TILER_INC) -I$(MOBILENET_GEN_PATH)/include MobileNetModel.c $(MOBILENET_GEN_PATH)/CNN_Generators.c $(TILER_LIB)
+$(TILER_EXE): 
+	gcc -o GenMobilenet $(USE_HARDWARE_CE) -Imbnets -I$(MOBILENET_GEN_PATH) -I$(TILER_INC) -I$(MOBILENET_GEN_PATH)/include $(TILER_APP_SRCS) $(TILER_LIB)
 
 
-# Run the code generator
-GenTile: GenTileBuild
+# Run the code generator and generated user kernels
+$(TILER_USER_KERNELS): $(TILER_EXE)
 	./GenMobilenet
 
-model: GenTile
+model: $(TILER_USER_KERNELS)
 
 all:: model
 
 clean::
-	$(RM) GenMobilenet MobilenetKernels.* GenMobilenetGraph
+	$(RM) GenMobilenet MN_Kernels.* MobilenetKernels.* GenMobilenetGraph
 
 .PHONY: model clean
 
