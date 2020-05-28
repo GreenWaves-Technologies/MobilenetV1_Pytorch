@@ -110,8 +110,8 @@ int mobilenet()
 
   // voltage-frequency settings
   PMU_set_voltage(1200,0);
-  rt_freq_set(RT_FREQ_DOMAIN_FC, 50000000);
-  rt_freq_set(RT_FREQ_DOMAIN_CL,150000000);
+  rt_freq_set(RT_FREQ_DOMAIN_FC,250000000);
+  rt_freq_set(RT_FREQ_DOMAIN_CL,175000000);
 
   // reading input data
   for (unsigned int i = 0; i < NUM_FILES; i++)

@@ -17,7 +17,6 @@ APP = Mobilenet
 
 BOARD_NAME?=gapuino
 
-
 TILER_PATH = $(GAP_SDK_HOME)/tools/autotiler_v3
 
 TILER_LIB = $(TILER_PATH)/lib/libtile.a
@@ -25,9 +24,17 @@ TILER_INC = $(TILER_PATH)/include
 TILER_GENERATOR_PATH = $(TILER_PATH)/generators
 
 MOBILENET_GEN_PATH = $(TILER_GENERATOR_PATH)/CNN
-MOBILENET_KER_PATH = $(wildcard $(TILER_GENERATOR_PATH)/CNN/CNN_*.c)
 
-TILER_APP_SRCS = MobileNetModel.c $(MOBILENET_GEN_PATH)/CNN_Generators.c
+MOBILENET_KER_PATH += $(TILER_GENERATOR_PATH)/CNN/CNN_BiasReLULinear_BasicKernels.c  
+MOBILENET_KER_PATH += $(TILER_GENERATOR_PATH)/CNN/CNN_Pooling_BasicKernels.c
+MOBILENET_KER_PATH += $(TILER_GENERATOR_PATH)/CNN/CNN_Conv_BasicKernels.c                  
+MOBILENET_KER_PATH += $(TILER_GENERATOR_PATH)/CNN/CNN_Conv_DP_BasicKernels.c         
+MOBILENET_KER_PATH += $(TILER_GENERATOR_PATH)/CNN/CNN_SoftMax.c
+MOBILENET_KER_PATH += $(TILER_GENERATOR_PATH)/CNN/CNN_Conv_DW_BasicKernels.c         
+MOBILENET_KER_PATH += $(TILER_GENERATOR_PATH)/CNN/CNN_MatAlgebra.c                   
+MOBILENET_KER_PATH += $(TILER_GENERATOR_PATH)/CNN/CNN_Conv_DW_DP_BasicKernels.c  
+
+TILER_APP_SRCS = MobileNetModel.c $(MOBILENET_GEN_PATH)/CNN_Generators.c $(MOBILENET_GEN_PATH)/CNN_Generator_Util.c
 TILER_EXE = GenMobilenet
 
 TILER_USER_KERNELS = MN_Kernels.c 
@@ -39,17 +46,15 @@ APP_INC += $(TILER_INC) $(CNN_AT_PATH)
 RM=rm -f
 
 
-APP_CFLAGS += -O3 $(USE_HARDWARE_CE)
+APP_CFLAGS += -O3 
 
 APP_CFLAGS += -mno-memcpy -fno-tree-loop-distribute-patterns  -fdata-sections -ffunction-sections 
-APP_LDFLAGS +=  -flto -Wl,--gc-sections 
+APP_LDFLAGS += -flto -Wl,--gc-sections 
 
 APP_CFLAGS += -w -Wno-maybe-uninitialized -Wno-unused-but-set-variable
 APP_CFLAGS += -I$(TILER_INC) -I$(MOBILENET_GEN_PATH) -Iutils/inc
 
 
-
-export GAP_USE_OPENOCD=1
 io=host
 
 ifeq ($(ALREADY_FLASHED),)
@@ -58,10 +63,9 @@ ifeq ($(ALREADY_FLASHED),)
 endif
 
 
-
 # Build the code generator
 $(TILER_EXE): 
-	gcc -o GenMobilenet $(USE_HARDWARE_CE) -Imbnets -I$(MOBILENET_GEN_PATH) -I$(TILER_INC) -I$(MOBILENET_GEN_PATH)/include $(TILER_APP_SRCS) $(TILER_LIB)
+	gcc -o GenMobilenet -Imbnets -I$(MOBILENET_GEN_PATH) -I$(TILER_INC) -I$(MOBILENET_GEN_PATH)/include $(TILER_APP_SRCS) $(TILER_LIB)
 
 
 # Run the code generator and generated user kernels
