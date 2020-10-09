@@ -52,6 +52,9 @@ int main(int argc, char **argv)
 
         AT_SetGraphCtrl(AT_GRAPH_PRODUCE_OPERINFOS, AT_OPT_ON);
         AT_SetGraphCtrl(AT_GRAPH_PRODUCE_OPERINFOS_CVAR_NAME, "MNOperCount");
+//        AT_SetGraphCtrl(AT_GRAPH_TRACE_EXEC, AT_OPT_ON);
+//        AT_SetGraphCtrl(AT_GRAPH_DUMP_TENSOR, AT_OPT_VAL(4));
+
 
         AT_SetGraphCtrl(AT_GRAPH_REORDER_CONSTANT_IN, AT_OPT_ON);
 

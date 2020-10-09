@@ -466,7 +466,7 @@ def main():
 	        Layers.append(txt)
 
 	        output_tensor = "Out"
-	        txt = 'TCArgInfoA("short int *__restrict", "{}",     ARG_SCOPE_ARG,   ARG_DIR_OUT,     0,  AT_MEM_L2, 0)'\
+	        txt = 'TCArgInfoA("short int *__restrict", "{}",     ARG_SCOPE_ARG,   ARG_DIR_OUT,    AT_MEM_L2,  AT_MEM_L2, 0)'\
 	            .format(output_tensor)
 	        WeightEdges.append(txt)
 

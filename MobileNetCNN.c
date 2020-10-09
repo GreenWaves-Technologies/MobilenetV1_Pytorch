@@ -120,7 +120,8 @@ void MobileNetCNN(){
 			TCArgInfo ("signed char *__restrict", "ML26",  ARG_SCOPE_GLOBAL, ARG_DIR_CONSTIN, 0,  AT_MEM_UNDEF, ConstInfo("./binFiles/L26_M0_L3.bin", 1, 1, 1, 0)),
 			TCArgInfo ("signed char *__restrict", "FL28",  ARG_SCOPE_GLOBAL, ARG_DIR_CONSTIN, 0,  AT_MEM_UNDEF, ConstInfo("./binFiles/L28_weight_L3.bin", 1, 1, 1, 0)),
 			TCArgInfo ( "short int * __restrict__", "BL28",  ARG_SCOPE_GLOBAL, ARG_DIR_CONSTIN, 0,  AT_MEM_UNDEF, ConstInfo(  "./binFiles/L28_weight_L3.bin", 1, 1, 1, 0)),
-			TCArgInfoA("short int *__restrict", "Out",     ARG_SCOPE_ARG,   ARG_DIR_OUT,     0,  AT_MEM_L2, 0)
+            TCArgInfo ("short int *__restrict", "Out", 	   ARG_SCOPE_ARG, ARG_DIR_OUT, AT_MEM_L2, AT_MEM_L2, 0)
+
 		),
 		CArgs(28,
 			TCArgInfo ("signed char *__restrict", "OutL0", ARG_SCOPE_LOCAL,  ARG_DIR_INOUT, 0, AT_MEM_UNDEF, 0),

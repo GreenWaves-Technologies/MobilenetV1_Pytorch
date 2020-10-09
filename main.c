@@ -30,6 +30,7 @@ int file_byte_size[NUM_FILES];
 PI_L2 char  *net_in     [NUM_FILES];
 
 signed char *__restrict ptr_input_L3;
+short int *  out_L2;
 
 // declared by the autotiler
 extern PI_L1 char *L1_Memory;
@@ -43,7 +44,7 @@ PI_L2 rt_fs_t    *FileSystem;
 void Process()
 {
     gap_cl_starttimer();  gap_cl_resethwtimer();
-    MobileNetCNN(ptr_input_L3);
+    MobileNetCNN(ptr_input_L3, out_L2);
 }
 
 //pmsis main task
@@ -102,6 +103,13 @@ int mobilenet()
     }
     ptr_input_L3    = net_in[ 0];
 
+    // allocating output buffer
+    out_L2 = pmsis_l2_malloc(sizeof(short int)*1000);
+    if(out_L2==NULL) {
+      printf("Failed Allocation of Output Buffer!\n");
+      pmsis_exit(-3);
+    }
+
 
     struct pi_device cluster_dev;
     struct pi_cluster_conf cl_conf;
@@ -130,37 +138,33 @@ int mobilenet()
     task->stack_size = (uint32_t) 4*1024;
     task->slave_stack_size = (uint32_t) 1024;
 
-//  while(1)
-//  {
-        pi_cluster_send_task_to_cl(&cluster_dev, task);
+    pi_cluster_send_task_to_cl(&cluster_dev, task);
 
-        int checksum = 0;
-        int max = -40000;
-        int class = -1;
-        short int *ptr16 = L2_Memory+0;
-        for(int i=0;i<1000;i++){
-            checksum += ptr16[i];
-            if (ptr16[i]>max){
-                max = ptr16[i];
-                class = i;
-            }
+    int checksum = 0;
+    int max = -40000;
+    int class = -1;
+    for(int i=0;i<1000;i++){
+        checksum += out_L2[i];
+        if (out_L2[i]>max){
+            max = out_L2[i];
+            class = i;
         }
-        printf("The final class is %d\n", class);
-        if (class == 144) printf("Correct Checksum!\n");
-        else printf("Checksum wrong! Current value is %d\n", class);
+    }
+    printf("The final class is %d\n", class);
+    if (class == 144) printf("Correct Checksum!\n");
+    else printf("Checksum wrong! Current value is %d\n", class);
 
-        {
-            unsigned int TotalCycles = 0, TotalOper = 0;
-            printf("\n");
-            for (int i=0; i<(sizeof(MNPerf)/sizeof(unsigned int)); i++) {
-                printf("%35s: %10d, Operation: %10d, Operation/Cycle: %f\n", MNLName[i], MNPerf[i], MNOperCount[i], ((float) MNOperCount[i])/ MNPerf[i]);
-                TotalCycles += MNPerf[i]; TotalOper += MNOperCount[i];
-            }
-            printf("\n");
-            printf("%35s: %10d, Operation: %10d, Operation/Cycle: %f\n", "Total", TotalCycles, TotalOper, ((float) TotalOper)/ TotalCycles);
-            printf("\n");
+    {
+        unsigned int TotalCycles = 0, TotalOper = 0;
+        printf("\n");
+        for (int i=0; i<(sizeof(MNPerf)/sizeof(unsigned int)); i++) {
+            printf("%35s: %10d, Operation: %10d, Operation/Cycle: %f\n", MNLName[i], MNPerf[i], MNOperCount[i], ((float) MNOperCount[i])/ MNPerf[i]);
+            TotalCycles += MNPerf[i]; TotalOper += MNOperCount[i];
         }
-//  }
+        printf("\n");
+        printf("%35s: %10d, Operation: %10d, Operation/Cycle: %f\n", "Total", TotalCycles, TotalOper, ((float) TotalOper)/ TotalCycles);
+        printf("\n");
+    }
 
     // network destruct
     MobileNetCNN_Destruct();
