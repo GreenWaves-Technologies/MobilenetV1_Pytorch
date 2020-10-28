@@ -15,7 +15,7 @@
 
 APP = Mobilenet
 
-BOARD_NAME?=gapuino
+PMSIS_OS=pulpos
 
 MOBILENET_GEN_PATH = $(TILER_CNN_GENERATOR_PATH)
 
@@ -35,7 +35,6 @@ TILER_USER_KERNELS = MN_Kernels.c
 
 APP_SRCS = main.c $(TILER_USER_KERNELS) $(MOBILENET_KER_PATH)
 APP_SRCS += utils/src/dnn_utils.c
-APP_SRCS += utils/src/ili9341.c utils/src/font.c 
 APP_INC += $(TILER_INC) $(CNN_AT_PATH)
 RM=rm -f
 

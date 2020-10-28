@@ -36,9 +36,8 @@ short int *  out_L2;
 extern PI_L1 char *L1_Memory;
 extern PI_L2 char *L2_Memory;
 
-// Filesystem and HyperRam structures
+//HyperRam structures
 struct pi_device HyperRam;
-PI_L2 rt_fs_t    *FileSystem;
 
 //cluster parallel task
 void Process()

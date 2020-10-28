@@ -1,9 +1,6 @@
 #if defined(__FREERTOS__)
 #include "pmsis.h"
 #include "pmsis_types.h"
-#include "pmsis_l2_malloc.h"
-#include "drivers/hyperbus.h"
-#include "hyperbus_cl_internal.h"
 #else
 # include "Gap.h"
 #endif
@@ -15,7 +12,6 @@
 #include "dnn_utils.h"
 
 #define MEMORY_POOL_SIZE 340000
-//short memory_pool[MEMORY_POOL_SIZE];
 struct pi_device HyperRam;
 
 
@@ -48,7 +44,7 @@ int loadLayerFromFsToL2(struct pi_device *fs, const char* file_name, void* buffe
 void* loadLayerFromFsToL3(struct pi_device *fs, const char* file_name, struct pi_device *hyper, int* layer_size)
 {
     //signed char* buff = (signed char*)memory_pool;
-    signed char* buff = (signed char*) rt_alloc(RT_ALLOC_L2_CL_DATA, MEMORY_POOL_SIZE);
+    signed char* buff = (signed char*) pmsis_l2_malloc( MEMORY_POOL_SIZE);
 
     printf("Loading layer \"%s\" from FS to L3\n", file_name);
 
@@ -93,7 +89,7 @@ void* loadLayerFromFsToL3(struct pi_device *fs, const char* file_name, struct pi
 
     *layer_size = size_total;
 
-    rt_free(RT_ALLOC_L2_CL_DATA, buff, MEMORY_POOL_SIZE);
+    pmsis_l2_malloc_free(buff, MEMORY_POOL_SIZE);
 
     return hyper_buff;
 }
