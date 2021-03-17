@@ -151,7 +151,7 @@ int mobilenet()
     }
     printf("The final class is %d\n", class);
     if (class == 144) printf("Correct Checksum!\n");
-    else printf("Checksum wrong! Current value is %d\n", class);
+    else printf("Checksum wrong! Current value is %d, expected value is: %d\n", class,144);
 
     {
         unsigned int TotalCycles = 0, TotalOper = 0;
