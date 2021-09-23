@@ -10,10 +10,19 @@ chips:
     - gap8
     - gap9
 variants:
-    std:
+    gap8:
         name: standard
         tags:
             - integration
             - release
+        duration: standard
+        flags: ~
+    gap9:
+        name: standard
+        tags:
+            - integration
+            - release
+        os:
+            - pulpos
         duration: standard
         flags: ~
