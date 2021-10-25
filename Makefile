@@ -17,6 +17,38 @@ APP = Mobilenet
 
 PMSIS_OS=pulpos
 
+include $(RULES_DIR)/at_common_decl.mk
+
+ifeq '$(TARGET_CHIP_FAMILY)' 'GAP9'
+	FREQ_CL?=50
+	FREQ_FC?=50
+	MODEL_L1_MEMORY=110000
+	MODEL_L2_MEMORY=1300000
+	MODEL_L3_MEMORY=8388608
+else
+	ifeq '$(TARGET_CHIP)' 'GAP8_V3'
+		FREQ_CL?=175
+	else
+		FREQ_CL?=50
+	endif
+	FREQ_FC?=250
+	MODEL_L1_MEMORY=50000
+	MODEL_L2_MEMORY?=350000
+	MODEL_L3_MEMORY=8000000
+endif
+
+ifdef MODEL_L1_MEMORY
+  MODEL_GEN_EXTRA_FLAGS += --L1 $(MODEL_L1_MEMORY)
+endif
+
+ifdef MODEL_L2_MEMORY
+  MODEL_GEN_EXTRA_FLAGS += --L2 $(MODEL_L2_MEMORY)
+endif
+
+ifdef MODEL_L3_MEMORY
+  MODEL_GEN_EXTRA_FLAGS += --L3 $(MODEL_L3_MEMORY)
+endif
+
 MOBILENET_GEN_PATH = $(TILER_CNN_GENERATOR_PATH)
 
 MOBILENET_KER_PATH += $(TILER_CNN_KERNEL_PATH)/CNN_BiasReLULinear_BasicKernels.c
@@ -46,7 +78,7 @@ APP_LDFLAGS += -flto -Wl,--gc-sections
 
 APP_CFLAGS += -w -Wno-maybe-uninitialized -Wno-unused-but-set-variable
 APP_CFLAGS += -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(MOBILENET_GEN_PATH) -Iutils/inc -I$(TILER_CNN_KERNEL_PATH)
-
+APP_CFLAGS += $(CNN_LIB_INCLUDE)
 
 io=host
 
@@ -58,12 +90,11 @@ endif
 
 # Build the code generator
 $(TILER_EXE): 
-	gcc -o GenMobilenet -Imbnets -I$(MOBILENET_GEN_PATH) -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(MOBILENET_GEN_PATH)/include $(TILER_APP_SRCS) $(TILER_LIB)
-
+	gcc -o GenMobilenet -Imbnets -I$(CNN_GEN_INCLUDE) -I$(MOBILENET_GEN_PATH) -I$(TILER_EMU_INC) -I$(TILER_INC) -I$(MOBILENET_GEN_PATH)/include $(TILER_APP_SRCS) $(TILER_LIB)
 
 # Run the code generator and generated user kernels
 $(TILER_USER_KERNELS): $(TILER_EXE)
-	./GenMobilenet
+	./GenMobilenet $(MODEL_GEN_EXTRA_FLAGS)
 
 model: $(TILER_USER_KERNELS)
 
@@ -75,4 +106,3 @@ clean::
 .PHONY: model clean
 
 include $(RULES_DIR)/pmsis_rules.mk
-
