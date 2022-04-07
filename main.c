@@ -21,7 +21,7 @@
 
 
 // input binary file
-#define NUM_FILES (1) 
+#define NUM_FILES (1)
 char *layer_b_names[] =
 {
     "L0_INPUT.bin"
@@ -96,7 +96,7 @@ int mobilenet()
     // reading input data
     for (unsigned int i = 0; i < NUM_FILES; i++)
     {
-        net_in[i] = loadLayerFromFsToL3(&fs, layer_b_names[i], 
+        net_in[i] = loadLayerFromFsToL3(&fs, layer_b_names[i],
             &HyperRam, &file_byte_size[i]);
         printf("Weight Size = %d at address %x\n", file_byte_size[i], net_in[i]);
     }
@@ -112,6 +112,7 @@ int mobilenet()
 
     struct pi_device cluster_dev;
     struct pi_cluster_conf cl_conf;
+    pi_cluster_conf_init(&cl_conf);
     cl_conf.id = 0;
     pi_open_from_conf(&cluster_dev, (void *) &cl_conf);
     if (pi_cluster_open(&cluster_dev))
@@ -167,7 +168,7 @@ int mobilenet()
 
     // network destruct
     MobileNetCNN_Destruct();
-  
+
     pi_cluster_close(&cluster_dev);
 
     // Exit Test
