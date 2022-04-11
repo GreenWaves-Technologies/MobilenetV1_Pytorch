@@ -132,12 +132,8 @@ int mobilenet()
         printf("pi_cluster_task alloc Error!\n");
         pmsis_exit(-1);
     }
-    memset(task, 0, sizeof(struct pi_cluster_task));
-    task->entry = Process;
-    task->arg = (void *) NULL;
-    task->stack_size = (uint32_t) 4*1024;
-    task->slave_stack_size = (uint32_t) 1024;
-
+    pi_cluster_task(task, Process, NULL);
+    pi_cluster_task_stacks(task, NULL, 1024);
     pi_cluster_send_task_to_cl(&cluster_dev, task);
 
     int checksum = 0;
