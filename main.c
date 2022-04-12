@@ -114,6 +114,7 @@ int mobilenet()
     struct pi_cluster_conf cl_conf;
     pi_cluster_conf_init(&cl_conf);
     cl_conf.id = 0;
+    cl_conf.cc_stack_size = 4*1024;
     pi_open_from_conf(&cluster_dev, (void *) &cl_conf);
     if (pi_cluster_open(&cluster_dev))
     {
