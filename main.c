@@ -135,7 +135,14 @@ int mobilenet()
     }
     pi_cluster_task(task, Process, NULL);
     pi_cluster_task_stacks(task, NULL, 1024);
+    #if defined(__GAP8__)
+    task->entry = Process;
+    task->stack_size = 4*1024;
+    task->slave_stack_size = 1024;
+    #endif
+    
     pi_cluster_send_task_to_cl(&cluster_dev, task);
+
 
     int checksum = 0;
     int max = -40000;

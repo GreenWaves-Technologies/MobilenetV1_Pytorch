@@ -15,7 +15,7 @@
 
 APP = Mobilenet
 
-PMSIS_OS=pulpos
+#PMSIS_OS=pulpos
 
 include $(RULES_DIR)/at_common_decl.mk
 
