@@ -21,7 +21,7 @@
 
 
 // input binary file
-#define NUM_FILES (1) 
+#define NUM_FILES (1)
 char *layer_b_names[] =
 {
     "L0_INPUT.bin"
@@ -96,7 +96,7 @@ int mobilenet()
     // reading input data
     for (unsigned int i = 0; i < NUM_FILES; i++)
     {
-        net_in[i] = loadLayerFromFsToL3(&fs, layer_b_names[i], 
+        net_in[i] = loadLayerFromFsToL3(&fs, layer_b_names[i],
             &HyperRam, &file_byte_size[i]);
         printf("Weight Size = %d at address %x\n", file_byte_size[i], net_in[i]);
     }
@@ -112,7 +112,9 @@ int mobilenet()
 
     struct pi_device cluster_dev;
     struct pi_cluster_conf cl_conf;
+    pi_cluster_conf_init(&cl_conf);
     cl_conf.id = 0;
+    cl_conf.cc_stack_size = 4*1024;
     pi_open_from_conf(&cluster_dev, (void *) &cl_conf);
     if (pi_cluster_open(&cluster_dev))
     {
@@ -131,13 +133,16 @@ int mobilenet()
         printf("pi_cluster_task alloc Error!\n");
         pmsis_exit(-1);
     }
-    memset(task, 0, sizeof(struct pi_cluster_task));
+    pi_cluster_task(task, Process, NULL);
+    pi_cluster_task_stacks(task, NULL, 1024);
+    #if defined(__GAP8__)
     task->entry = Process;
-    task->arg = (void *) NULL;
-    task->stack_size = (uint32_t) 4*1024;
-    task->slave_stack_size = (uint32_t) 1024;
-
+    task->stack_size = 4*1024;
+    task->slave_stack_size = 1024;
+    #endif
+    
     pi_cluster_send_task_to_cl(&cluster_dev, task);
+
 
     int checksum = 0;
     int max = -40000;
@@ -167,7 +172,7 @@ int mobilenet()
 
     // network destruct
     MobileNetCNN_Destruct();
-  
+
     pi_cluster_close(&cluster_dev);
 
     // Exit Test
