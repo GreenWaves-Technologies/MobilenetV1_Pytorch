@@ -44,7 +44,7 @@ int loadLayerFromFsToL2(struct pi_device *fs, const char* file_name, void* buffe
 void* loadLayerFromFsToL3(struct pi_device *fs, const char* file_name, struct pi_device *hyper, int* layer_size)
 {
     //signed char* buff = (signed char*)memory_pool;
-    signed char* buff = (signed char*) pmsis_l2_malloc( MEMORY_POOL_SIZE);
+    signed char* buff = (signed char*) pi_l2_malloc( MEMORY_POOL_SIZE);
 
     printf("Loading layer \"%s\" from FS to L3\n", file_name);
 
@@ -89,7 +89,7 @@ void* loadLayerFromFsToL3(struct pi_device *fs, const char* file_name, struct pi
 
     *layer_size = size_total;
 
-    pmsis_l2_malloc_free(buff, MEMORY_POOL_SIZE);
+    pi_l2_free(buff, MEMORY_POOL_SIZE);
 
     return hyper_buff;
 }
