@@ -103,7 +103,7 @@ int mobilenet()
     ptr_input_L3    = net_in[ 0];
 
     // allocating output buffer
-    out_L2 = pmsis_l2_malloc(sizeof(short int)*1000);
+    out_L2 = pi_l2_malloc(sizeof(short int)*1000);
     if(out_L2==NULL) {
       printf("Failed Allocation of Output Buffer!\n");
       pmsis_exit(-3);
@@ -128,7 +128,7 @@ int mobilenet()
     if (MobileNetCNN_Construct()) printf("Construct failed\n");
     else printf("Construct OK\n");
 
-    struct pi_cluster_task *task = pmsis_l2_malloc(sizeof(struct pi_cluster_task));
+    struct pi_cluster_task *task = pi_l2_malloc(sizeof(struct pi_cluster_task));
     if(task==NULL) {
         printf("pi_cluster_task alloc Error!\n");
         pmsis_exit(-1);
