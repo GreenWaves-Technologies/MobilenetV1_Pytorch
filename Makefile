@@ -98,7 +98,7 @@ $(TILER_USER_KERNELS): $(TILER_EXE)
 
 model: $(TILER_USER_KERNELS)
 
-all:: model
+build:: model
 
 clean::
 	$(RM) GenMobilenet MN_Kernels.* MobilenetKernels.* GenMobilenetGraph
